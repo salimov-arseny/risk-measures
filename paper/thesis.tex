@@ -1,0 +1,1748 @@
+\documentclass[12pt]{article}
+\usepackage[russian]{babel}
+\usepackage{amsthm, amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{placeins}
+\usepackage{titlesec}
+\usepackage{caption}
+\usepackage{tikz}
+\usepackage[a4paper, mag=1000,
+    left=25mm, right=25mm, top=18mm, bottom=20mm,
+    bindingoffset=0mm,
+    footskip=3.5ex,
+    headheight=0cm, headsep=0cm
+]{geometry}
+\usetikzlibrary{arrows.meta}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18} % Настройки размера и совместимости
+
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection.}{0.5em}{}
+
+
+\newcommand{\opencirclelocal}[2]{\filldraw[fill=white, draw=black] (axis cs:#1,#2) circle (1.5pt);}
+\newcommand{\closedcirclelocal}[2]{\filldraw[fill=black, draw=black] (axis cs:#1,#2) circle (1.5pt);}
+
+            
+% Математические окружения
+\theoremstyle{plain}
+\newtheorem{theorem}{Теорема}[section]
+\newtheorem{lemma}[theorem]{Лемма}
+\newtheorem{state}{Утверждение}[section]
+
+\theoremstyle{definition}
+\newtheorem{definition}{Определение}[section]
+\newtheorem{example}{Пример}[section]
+
+\theoremstyle{remark}
+\newtheorem{remark}{Замечание}[section]
+
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    tabsize=4,
+    captionpos=t
+}
+
+
+\renewcommand{\proofname}{Доказательство}
+
+\begin{document}
+
+\begin{titlepage}
+\begin{center}
+    {\Large 
+    ФЕДЕРАЛЬНОЕ ГОСУДАРСТВЕННОЕ БЮДЖЕТНОЕ \\
+    ОБРАЗОВАТЕЛЬНОЕ \\
+    УЧРЕЖДЕНИЕ ВЫСШЕГО ОБРАЗОВАНИЯ \\
+    \vspace{0.5em} 
+    «МОСКОВСКИЙ ГОСУДАРСТВЕННЫЙ УНИВЕРСИТЕТ \\
+    имени М.В. ЛОМОНОСОВА»
+
+    \vspace{3em} 
+
+    МЕХАНИКО-МАТЕМАТИЧЕСКИЙ ФАКУЛЬТЕТ \\
+    \vspace{1.5em} 
+    КАФЕДРА ТЕОРИИ ВЕРОЯТНОСТЕЙ
+    } 
+\end{center}
+
+\vspace{2em} 
+
+\begin{center}
+   \Large КУРСОВАЯ РАБОТА
+\end{center} 
+
+\begin{center}
+    \Large 
+    \textbf{ВЕРОЯТНОСТНО ЭКВИВАЛЕНТНЫЕ МЕРЫ РИСКА}
+\end{center}
+
+\vfill
+
+
+\noindent\hspace*{0.47\textwidth}
+\begin{minipage}[t]{0.47\textwidth} 
+    \raggedright 
+    
+    \large Выполнил: \\
+    \large студент 308 группы \\
+    \large Салимов Арсений Евгеньевич
+    \vspace{2.5em} 
+
+    \large Научный руководитель: \\ 
+    \large профессор, доктор физ.-мат. наук \\ 
+    \large Фалин Геннадий Иванович 
+    \vspace{2.5em} 
+    
+\end{minipage}
+
+\vspace*{\fill} 
+
+\begin{center}
+    Москва, 2025 г.
+\end{center}
+
+\end{titlepage}
+
+\clearpage
+\thispagestyle{empty}
+\null
+\newpage
+
+\setcounter{page}{1}
+
+\section{Введение}
+
+В финансовой сфере, в частности для банков и страховых организаций, ключевое значение имеет оценка рисков. Для этого используются различные меры риска, такие как
+\begin{enumerate}
+    \item Value-at Risk (VaR),
+    \item Tail Value-at-Risk(TVaR),
+    \item Conditional Tail Expectation(CTE),
+    \item Conditional Value-at-Risk(CVaR),
+    \item Expected Shortfall(ES)
+\end{enumerate}
+и прочие. Они позволяют рассчитать потенциальные потери и, соответственно, необходимый уровень капитала. Все эти величины являются функциями от положительной случайной величины $X$, которая моделирует потери для финансовой организации, и параметра $p \in (0, 1)$, который мы будем называть уровнем доверия. 
+
+В различных источниках вышеперечисленные меры риска обозначаются по-разному. Например, в \cite{Peng} величина Tail Value-at-Risk обозначается следующим образом: 
+\[
+    \xi_{TVaR}(\alpha), \text{ где } \xi - \text{ случайная величина, } \alpha - \text{ уровень доверия.}
+\]
+В \cite{Denuit} можно встретить такое обозначение:
+\[
+    \text{TVaR}[X; p], \text{ где } X - \text{ случайная величина, } p - \text{ уровень доверия.}
+\]
+А уже в \cite{Desmedt} эта же величина обозначается так:
+\[
+    \text{TVaR}_p[X], \text{ где } X - \text{ случайная величина, } p - \text{ уровень доверия.}
+\]
+
+Для единообразия обозначений, в данной работе мера риска $M$, соответствующая случайной величине $X$ и уровню доверия $p$, будет обозначаться как $M_p(X)$. Например, Value-at-Risk на уровне доверия $p$ будет обозначаться VaR$_p(X)$.
+
+Также, в зависимости от источника, вышеперечисленные меры определяются по-разному. Рассмотрим как они определяются у различных авторов и то, как эти определения можно интерпретировать. 
+
+Пусть $X$ - случайная величина на вероятностном пространстве $(\Omega, \mathcal{F}, \mathbb{P})$, а $F_X(x)$ - ее функция распределения.
+
+\begin{enumerate}
+    \item Value-at-Risk(VaR)
+    
+    Эта мера риска практически везде определятся одинаково. В \cite{Denuit}, \cite{Desmedt}, \cite{Hardy}, \cite{Peng}, \cite{McNeil}, \cite{метка0} следующее определение:
+    \[
+        \text{VaR}_p(X) = \inf\{x\in\mathbb{R}: F_X(x) \geq p\}
+    \]
+
+    Заметим, что из определения следует, что $F_X(\text{VaR}_p(X)) \geq p$.
+    Как известно, функция распределения не убывает и непрерывна справа, а также может иметь участки постоянства и разрывы первого рода. Определение значения  VaR$_p(X)$ в этих случаях проиллюстрировано на рисунке 1. Если же функция распределения непрерывна и строго возрастает, то у нее существует обратная $F^{-1}_X(p)$ и VaR$_p(X) = F^{-1}_X(p)$.
+
+\begin{figure}[htp] % 'h' here, 't' top, 'p' page - adjust placement options as needed
+    \centering % Center the figure
+    \begin{tikzpicture}
+        % Define symbolic coordinates used in this specific plot
+        \pgfmathsetmacro{\xOne}{1}
+        \pgfmathsetmacro{\xTwo}{3}
+        \pgfmathsetmacro{\xThree}{4.5}
+        \pgfmathsetmacro{\pOne}{0.4}  % Original p value (step height)
+        \pgfmathsetmacro{\pTwo}{0.8}  % Height of second step
+        \pgfmathsetmacro{\pNew}{0.6} % <--- NEW p value (between pOne and pTwo)
+        \pgfmathsetmacro{\qNew}{\xTwo} % <--- Corresponding Q(p_new) is xTwo, the location of the *next* jump
+        
+        \begin{axis}[
+            % --- Style options ---
+            axis lines=middle,
+            xlabel={$x$}, ylabel={$F_X(x)$}, % Note: Image uses F_X(x)
+            xlabel style={anchor=north east, below left},
+            ylabel style={anchor=north east, above left},
+            ymin=-0.1, ymax=1.2,
+            xmin=-0.5, xmax=5.5,
+            xtick=\empty,
+            ytick={0}, yticklabels={0},
+            % --- MODIFIED ticks/labels for TWO points ---
+            extra y ticks={\pOne, \pNew, \pTwo},           % Show both p values on y-axis
+            extra y tick labels={$p_1$, $p_2$, $p_3$},        % Label them p and p' (adjust if needed)
+            extra y tick style={grid=none, tick label style={anchor=east, xshift=-2pt}},
+            extra x ticks={\xOne, \qNew},           % Show both Q values on x-axis
+            % Original uses VaR_p(X), let's adapt:
+            extra x tick labels={$\mathrm{VaR}_{p_1}(X)$, $\mathrm{VaR}_{p_2}(X)$}, % Label using VaR notation like image
+            extra x tick style={grid=none, tick label style={anchor=north, yshift=-2pt}},
+            % --- End of modified ticks ---
+            width=0.7\textwidth, height=0.5\textwidth,
+            clip=false,
+            axis line style={-Latex},
+            title={} % Removed title to match image more closely
+            % --- End of style options ---
+        ]
+        % Draw CDF segments (blue)
+        \draw[blue, thick] (axis cs: -0.5, 0) -- (axis cs: \xOne, 0);
+        \draw[blue, thick] (axis cs: \xOne, \pOne) -- (axis cs: \xTwo, \pOne);
+        \draw[blue, thick] (axis cs: \xTwo, \pTwo) -- (axis cs: \xThree, \pTwo);
+        \draw[blue, thick] (axis cs: \xThree, 1) -- (axis cs: 5.5, 1);
+
+        % Draw jumps and points (blue dotted)
+        \draw[blue, densely dotted] (axis cs: \xOne, 0) -- (axis cs: \xOne, \pOne);
+        \opencirclelocal{\xOne}{0} \closedcirclelocal{\xOne}{\pOne}
+        \draw[blue, densely dotted] (axis cs: \xTwo, \pOne) -- (axis cs: \xTwo, \pTwo);
+        \opencirclelocal{\xTwo}{\pOne} \closedcirclelocal{\xTwo}{\pTwo}
+        \draw[blue, densely dotted] (axis cs: \xThree, \pTwo) -- (axis cs: \xThree, 1);
+        \opencirclelocal{\xThree}{\pTwo} \closedcirclelocal{\xThree}{1}
+
+        % Visualization lines for ORIGINAL Q(p)/VaR_p (red)
+        \draw[red, dashed] (axis cs: 0, \pOne) -- (axis cs: \xOne, \pOne);
+        \draw[red, dashdotted] (axis cs: \xOne, \pOne) -- (axis cs: \xOne, 0);
+
+        % --- ADDED Visualization lines for NEW Q(p')/VaR_p' (green) ---
+        % Horizontal line from p' to x = Q(p') = xTwo
+        \draw[green!60!black, dashed, very thick] (axis cs: 0, \pNew) -- (axis cs: \qNew, \pNew);
+        % Vertical line from (Q(p'), p') down to x-axis
+        \draw[green!60!black, dashed, very thick] (axis cs: \qNew, \pNew) -- (axis cs: \qNew, 0);
+        % --- End of added lines ---
+
+        \draw[purple, dashed] (axis cs: 0, \pTwo) -- (axis cs: \xTwo, \pTwo);
+        \draw[purple, dashdotted] (axis cs: \xTwo, \pTwo) -- (axis cs: \xTwo, 0);
+        
+        % Add axis labels (if not done by style, or if specific placement needed)
+        % The style above handles basic x and F(x) labels well.
+        % Let's adjust y-axis label to exactly match F_X(x)
+
+
+        \end{axis}
+    \end{tikzpicture}
+    \caption{VaR в случае участков постоянства и разрывов} % Updated caption
+    \label{fig:case1_two_VaR} % Updated label
+
+\end{figure}
+    Обычно значение $p$ выбирается близким к 1, например, $p = 0.99$. Показатель VaR следует понимать как пороговое значение убытков, превышение которого происходит лишь в $100(1-p)\%$ случаях. Если 
+    VaR$_p(X)$ соответствует уровню доверия $p$, то с вероятностью не менее чем $p$, потери не превысят величину VaR$_p(X)$.
+    Следует отметить, что показатель VaR не отражает информацию о размере потерь в случае, если они превышают VaR$_p(X)$.
+
+    
+    В \cite{Albrecht} определение дается так: 
+    \[
+        \text{VaR}_p(X) = F^{-1}_X(1-p)= \inf\{x\in\mathbb{R}: F_X(x) \geq 1- p\}
+    \]
+    Оно практически совпадает с предыдущим, однако здесь уровень доверия $p$ выбирается близким к 0 и понимается как вероятность потерь выше уровня VaR$_p(X)$.
+
+    \item Tail Value-at-Risk(TVaR)
+
+    Среди изученных источников TVaR определяется в \cite{Denuit}, \cite{Desmedt}, \cite{Peng} так:
+    \[
+        \text{TVaR}_p(X)=\frac{1}{1-p}\int_p^1\text{VaR}_q(X)dq,
+    \]
+    где определение VaR берется из \cite{Denuit}. 
+
+    Как уже было сказано, показатель VaR не дает информацию о величине потерь сверх уровня VaR. Например, два распределения $X_1, X_2$ могут иметь одинаковое значение VaR при уровне доверия $p$, однако $X_2$ будет иметь более "тяжелый хвост" и, соответственно, при превышении уровня VaR, иметь большую вероятность колоссальных потерь, чем $X_1$. TVaR можно воспринимать как "усреднение" всех уровней VaR, начиная с p. Таким образом, TVaR служит более чувствительной характеристикой риска, учитывающей ожидаемые потери в условиях, когда убытки превышают уровень VaR.
+
+    Дальше будет показано, что если $X$ - абсолютно непрерывная случайная величина, то 
+    \[
+        \frac{1}{1-p}\int_p^1\text{VaR}_q(X)dq = \mathbb{E}(X|X>\text{VaR}_p(X))
+    \]
+    Поэтому показатель TVAR действительно дает больше информации о больших потерях.
+
+    \item Conditional Tail Expectaion(CTE)
+
+    В \cite{Denuit}, \cite{Desmedt}, \cite{Cousin} CTE определяется для всех случайных величин следующим образом:
+    \[
+        \text{CTE}_p(X)= \mathbb{E}(X|X > \text{VaR}_p(X))
+    \]
+    
+    Как было сказано, в случае абсолютно непрерывных распределений это определение совпадает с определением TVaR. 
+    В \cite{Hardy} худшей $(1-p)$ частью распределения называется его часть сверх VaR$_p(X)$ и CTE определяется как среднее значение потерь при условии попадания в худшую $(1-p)$ часть распределения. Если $X$ не имеет атома в точке VaR$_p(X)$, то определение совпадает с определением выше. В противном случае CTE задается так:
+    \[
+        \text{CTE}_p(X)=\frac{(p'-p)\text{VaR}_p(X)+(1-p')\mathbb{E}(X|X > \text{VaR}_p(X))}{1-p},
+    \]
+    где $p' = max\{q: \text{VaR}_q(X) = \text{VaR}_p(X)\}$.
+    
+    Выбор такого определения обоснован тем, что в случае атома в точке VaR$_p(X)$, $\mathbb{P}(X>\text{VaR}_p(X)) < 1 - p$, и необходимо "добрать" часть вероятностной массы из точки VaR$_p(X)$(это множитель $p'-p$).
+
+    \item Conditional Value-at-Risk(CVaR)
+    
+    В \cite{Denuit} CVaR определяется как:
+    \[
+        \text{CVaR}_p(X)=\mathbb{E}(X-\text{VaR}_p(X)|X > \text{VaR}_p(X))
+    \]
+    
+    Рассмотрим ситуацию, в которой страховая компания устанавливает капитал в размере VaR$_p(X)$ при заданном уровне доверия $p$. В таком случае CVaR интерпретируется как ожидаемый дополнительный дефицит капитала при условии, что убытки превышают этот порог.
+
+    Так же заметим, что это выражение можно переписать в следующем виде:
+    \[
+        \text{CVaR}_p(X)=\mathbb{E}(X-\text{VaR}_p(X)|X > \text{VaR}_p(X)) = 
+    \]
+    \[
+        = \mathbb{E}(X|X > \text{VaR}_p(X)) - \mathbb{E}(\text{VaR}_p(X)|X > \text{VaR}_p(X)) = 
+    \]
+    \[
+        =\text{CTE}_p(X) - \text{VaR}_p(X)
+    \]
+    
+    В \cite{Albrecht} определение другое:
+    \[
+         \text{CVaR}_p(X)=\mathbb{E}(X|X > \text{VaR}_p(X))
+    \]
+    Напомним, что здесь VaR$_p(X)$ определялся как $F_X^{-1}(1-p)$ и значение $p$ обычно близко к 0. Тогда определение CVaR отсюда совпадает с определением CTE в других источниках.
+
+    \item Expected Shortfall(ES)
+    
+    В \cite{McNeil}, \cite{метка0} и \cite{Embrechts} определение дается следующим образом:
+    \[
+        \text{ES}_p(X)=\frac{1}{1-p}\int_p^1\text{VaR}_q(X)dq,
+    \]
+    то есть оно совпадает с определением TVaR в остальных источниках.
+
+    В \cite{Denuit} определение такое:
+    \[
+        \text{ES}_p(X)= \mathbb{E}((X-\text{VaR}_p(X))_{+}),
+    \]
+    где $x_{+}=
+        \begin{cases}
+        0, &  x < 0 \\
+        x, &  x \geq 0 
+        \end{cases}$
+    
+    По формуле полного математического ожидания, это можно расписать как:
+    \[
+        \text{ES}_p(X)= \mathbb{E}((X-\text{VaR}_p(X))_{+}) = 
+    \]
+    \[
+        \mathbb{E}[(X-\text{VaR}_p(X))_{+}|(X-\text{VaR}_p(X)\leq 0)]\cdot \mathbb{P}(X-\text{VaR}_p(X)\leq 0) + 
+    \]
+    \[
+         + \mathbb{E}[(X-\text{VaR}_p(X))_{+}|(X-\text{VaR}_p(X) > 0)]\cdot \mathbb{P}(X-\text{VaR}_p(X) > 0) = 
+    \]
+    \[
+        = 0 + \mathbb{E}[X-\text{VaR}_p(X)|X > \text{VaR}_p(X)]\cdot \mathbb{P}(X> \text{VaR}_p(X)) = 
+    \]
+    \[
+        = \text{CVaR}_p(X)\cdot (1-F_X(\text{VaR}_p(X)))
+    \]
+
+    В случае абсолютно непрерывного распределения будет выполнено:
+    \[
+        \text{CVaR}_p(X) = \frac{\text{ES}_p(X)}{1-p}
+    \]
+
+    В \cite{Nadarajah} другое определение:
+    \[
+        \text{ES}_p(X) =  \frac{1}{p}[\mathbb{E}(X\cdot\mathbb{I}(X \leq \text{VaR}_p(X))) + p\cdot\text{VaR}_p(X) - 
+    \]
+    \[
+        - \text{VaR}_p(X)\cdot \mathbb{P}(X \leq \text{VaR}_p(X))]
+    \]
+
+    Когда $X$ - абсолютно непрерывная случайная величина можно записать
+    \[
+        \text{ES}_p(X)= \frac{1}{p}\mathbb{E}(X\cdot\mathbb{I}(X \leq \text{VaR}_p(X))) = \mathbb{E}(X| X \leq \text{VaR}_p(X))
+    \]
+    
+\end{enumerate}
+
+
+В настоящее время в рамках регуляторных изменений рассматривается переход от VaR к ES(в смысле определения из \cite{McNeil}) в качестве основной меры оценки риска(это более подробно изложено в \cite{BCBS2016}). Однако, при замене VaR на ES возникает вопрос о сопоставимости этих мер. Необходимо понять, как выбрать такой уровень доверия для ES, чтобы замена VaR не привела к резкому изменению в требованиях к капиталу. В частности, регуляторами предложена замена VaR с уровнем доверия 99\% на ES с уровнем 97.5\%. Например, если  ES$_{0.975} >$ VaR$_{0.99}$, то требования к капиталу возрастут. Для оценки последствий такого перехода вводится показатель эквивалентности этих мер риска - PELVE.
+
+PELVE определяется как решение уравнения ES$_{1-c\varepsilon}(X)=$ VaR$_{1-\varepsilon}(X)$ относительно $c$ при фиксированном $\varepsilon$. Он позволяет определить, насколько нужно скорректировать уровень доверия ES, чтобы значение ES стало эквивалентно значению VaR для заданного уровня доверия. Пороговым значением здесь является число $2.5$. Если значение PELVE превышает $2.5$, то замена VaR$_{0.99}$ на ES$_{0.975}$ приведет к необходимости увеличения капитала. И наоборот, если PELVE окажется ниже $2.5$, такой переход может привести к его снижению. Далее будет показано, что для многих моделей рисков значения PELVE часто превышают $2.5$. Это объясняет обеспокоенность финансовых организаций (см. \cite{BCBS2015}) относительно потенциального увеличения регуляторной нагрузки при переходе на ES в качестве основной меры риска.
+
+ 
+
+\section{Определение и простейшие свойства PELVE}
+
+\subsection{Стоимость под риском, ожидаемый дефицит и PELVE}
+\paragraph{}
+Известно, что в теории общего страхования суммарный иск моделируется с помощью положительной абсолютно непрерывной случайной величины. Этот выбор обусловлен тем, что дискретность денежных единиц пренебрежима мала в прикладных расчетах. Например, с практической точки зрения суммы 1 млн и 1 млн $+$ 1 рубль не различимы, что позволяет приближать дискретные выплаты непрерывными распределениями.
+
+Пусть $L^1$ - множество случайных величин, заданных на $(\Omega, \mathcal{F}, \mathbb{P})$, с конечным математическим ожиданием. В данной работе мы ограничиваемся положительными абсолютно непрерывными случайными величинами из $L^1$, так как именно этот класс распределений наиболее важен для приложений в страховании.
+\begin{definition}
+    Пусть $X \in L^1$. Обозначим через $F_X(x),\;p_X(x),\; F_X^{-1}(q)$, где $x \in \mathbb{R}$, $ q \in [0,1)$, ее распределение, плотность и квантильную функцию соотвественно.
+\end{definition}
+
+Ниже мы определим две наиболее распространенные меры риска - стоимость под риском(VaR - Value at Risk) и ожидаемый дефицит(ES - Expected Shortfall)\footnote{Далее будем использовать английские обозначения ввиду их распространенности и краткости.}.
+\begin{definition}
+    $$
+    \text{VaR}_p(X) = F_X^{-1}(p) \text{ - VaR на уровне доверия } p \in [0,1)
+    $$
+    $$
+    \text{ES}_p(X) = \frac{1}{1-p} \int_p^1F_X^{-1}(p)dq \text{ - ES на уровне доверия } p \in [0, 1)
+    $$
+\end{definition}
+
+
+\begin{remark}
+     С помощью замены переменной в интеграле можно получить эквивалентное определение ES:
+     \[
+     \text{ES}_p(X) = \frac{1}{1-p}\int_p^1 F_X^{-1}(q)dq =\left\langle
+     \begin{array}{c}
+        q = F_X(x) \\
+        dq = p_X(x)dx
+      \end{array}
+        \right\rangle
+      = \frac{1}{1-p}\int_{F_X^{-1}(p)}^{+\infty}xp_X(x)dx = 
+      \] 
+      \[
+      = \frac{1}{\mathbb{P}(X> \text{VaR}_p(X))} \int_{\text{VaR}_p(X)}^{+\infty}xp_X(x)dx = \mathbb{E}(X|X > \text{VaR}_p(X))
+      \]
+\end{remark}  
+
+\begin{remark}
+    В силу замечания 2.1 ES$_0(X) =$ $\mathbb{E}X$ и ES$_p(X) \geq$ VaR$_p(X).$ 
+\end{remark}
+
+Это определение можно понимать следующим образом: при заданном уровне доверия $p$, площадь под графиком плотности при x < VaR$_p(X)$ равна $p$, т.е. с вероятностью $p$ суммарный иск к страховой компании не превысит VaR$_p(X)$. ES показывает среднее значение потерь, при условии, что они превысили порог VaR$_p(X)$(см. рис. 2).
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.54 \textwidth]{var_es.png} % Путь к изображению
+    \caption{Визуализация VaR и ES} % Подпись
+\end{figure}
+
+С учетом данных выше определений мы вводим основное определение этой работы - \textit{Уровень Вероятностной Эквивалентности VaR и ES(PELVE)}:
+
+\begin{definition}
+    
+    Для значения $\varepsilon \in (0,1)$, PELVE случайной величины $X$, обозначаемый через $\Pi_{\varepsilon}$(X), - это константа $c \in [1, 1/\varepsilon]$, такая что 
+    \begin{equation}
+    \text{ES}_{1-c\varepsilon}(X)=\text{VaR}_{1-\varepsilon}(X)
+    \end{equation}
+
+\end{definition}
+
+Мы будем рассматривать значения $\varepsilon$ близкие к 0, так как именно они представляют наибольший практический интерес. Например $\varepsilon = 0.01$ соответствует величине VaR$_{0.99}$ в \cite{BCBS2016}.
+
+В \cite{метка0}, чтобы строго определить PELVE для всех случайных величин задают отображение $\Pi_\varepsilon(X):L^1 \to \mathbb{R}$ следующим образом:
+
+\begin{equation*}
+\Pi_\varepsilon(X) = \inf\{c \in [1, 1/\varepsilon]: \text{ES}_{1-c\varepsilon}(X) \leq \text{VaR}_{1-\varepsilon}(X)\}
+\end{equation*}
+
+Дальше будет показано, что (1) обычно имеет единственное решение $c \in [1, 1/\varepsilon]$ для большинства используемых распределений и достаточно малых $\varepsilon$, поэтому мы будем пользоваться только определением (1).
+
+\begin{remark}
+    Можно было бы вместо (1) рассмотреть следующее уравнение 
+    \[
+        \text{ES}_{1-\delta}(X) = \text{VaR}_{1-\delta/d}(X)
+    \]
+    относительно $d \in [1, \delta)$ при фиксированном $\delta \in (0, 1]$, но ввиду того, что мы рассматриваем только абсолютно непрерывные случайные величины верно, что $F_X(F^{-1}(p))=p$, и $d(\delta)$ сразу же выражается следующим образом:
+    \[
+        1-\frac{\delta}{d}= F_X(\text{ES}_{1-\delta}(X))
+    \]
+    \[
+        d = \frac{\delta}{1-F_X(\text{ES}_{1-\delta}(X))}
+    \]
+    Если ввести обозначение $S_X(x)=1-F_X(x)$, то формула выше примет вид:
+    \[
+        d = \frac{\delta}{S_X(\text{ES}_{1-\delta}(X))}
+    \]
+    Таким образом, решение этого уравнение не представляет какой-либо сложности.
+\end{remark}
+
+\subsection{Существование и единственность}
+Рассмотрим уравнение (1):
+\[
+    \text{ES}_{1-c\varepsilon}(X)=\text{VaR}_{1-\varepsilon}(X)
+\]
+Отметим, что при $c<1$ оно не может иметь решений, так как
+\[
+    \text{ES}_{1-c\varepsilon}(X) \geq \text{VaR}_{1-c\varepsilon}(X) > \text{VaR}_{1-\varepsilon}(X),
+\]
+а при $c > 1/\varepsilon$ не определено  значение ES$_{1-c\varepsilon}(X)$. Таким образом, решение действительно следует искать при $c \in [1, 1/\varepsilon]$. Тогда $1-c \varepsilon \in [0, 1-\varepsilon]$. 
+
+Положим $p:=1-c\varepsilon$ и ES$_p(X) := f(p)$, а VaR$_p(X)$ будем обозначать через $F^{-1}(p)$. Тогда уравнение (1) примет вид:
+\[
+f(p)= F^{-1}(1-\varepsilon), \text{ где } p \in [0, 1-\varepsilon]
+\]
+Посмотрим какими свойствами обладает функция $f(p):$
+
+\[
+    \frac{d}{dp}f(p)=\frac{d}{dp}\bigg(\frac{1}{1-p}\int_p^1F^{-1}(q)dq\bigg)= \frac{-(1-p)F^{-1}(p)+\int_p^1F^{-1}(q)dq}{(1-p)^2}\geq 0 
+\]
+поскольку $F^{-1}(q)$ возрастает, и знаменатель положительный. Так как мы рассматриваем абсолютно непрерывные случайные величины, то равенства быть не может из-за возрастания $F^{-1}(q)$. Таким образом $f'(p)$ существует и положительна, а значит $f(p)$ непрерывна и возрастает.
+
+В силу замечания 2.2 ES$_0(X) = \mathbb{E}X$ и ES$_{1-\varepsilon}(X) \geq$ VaR$_{1-\varepsilon}(X)$. Тогда возможны два случая:  
+
+\begin{figure}[h]
+    \centering
+    \begin{minipage}{0.45\textwidth} % уменьшение ширины графиков
+        \centering
+        \begin{tikzpicture}
+            \begin{axis}[
+                axis lines = middle,
+                enlargelimits = true,
+                xlabel={$p$},
+                ylabel={ES$_p(X)$},
+                xlabel style={at={(axis description cs:1.05,0)},anchor=north},
+                ylabel style={at={(axis description cs:0,1.05)},anchor=south},
+                xtick={0,0.9},
+                xticklabels={$0$, $1-\varepsilon$},
+                ytick={1,2,3},
+                yticklabels={\tiny $\mathbb{E}X$,\tiny VaR$_{1-\varepsilon}(X)$,\tiny ES$_{1-\varepsilon}(X)$},
+                ymin=0, ymax=3.5,
+                xmin=0, xmax=1.1
+            ]
+                \draw[dashed] (axis cs:0.7,2) -- (axis cs:0,2);
+                \draw[dashed] (axis cs:0.7,2) -- (axis cs:0.7,0);
+                \draw[dashed] (axis cs:0.9, 3) -- (axis cs:0,3);
+                \draw[dashed] (axis cs:0.9, 3) -- (axis cs:0.9,0);
+                \addplot[smooth, thick] coordinates {(0,1) (0.4, 1.2) (0.7,2) (0.9, 3)};
+                \fill (axis cs:0,1) circle (1.5pt);
+            \end{axis}
+        \end{tikzpicture}
+        \caption{$\mathbb{E}X \leq$ VaR$_{1-\varepsilon}(X)$}
+    \end{minipage}\hfill % добавляем пробел между графиками
+    \begin{minipage}{0.45\textwidth} % уменьшение ширины графиков
+        \centering
+        \begin{tikzpicture}
+            \begin{axis}[
+                axis lines = middle,
+                enlargelimits = true,
+                xlabel={$p$},
+                ylabel={ES$_p(X)$},
+                xlabel style={at={(axis description cs:1.05,0)},anchor=north},
+                ylabel style={at={(axis description cs:0,1.05)},anchor=south},
+                xtick={0,0.9},
+                xticklabels={$0$, $1-\varepsilon$},
+                ytick={0.5, 1,3},
+                yticklabels={\tiny VaR$_{1-\varepsilon}(X)$,\tiny $\mathbb{E}X$,\tiny ES$_{1-\varepsilon}(X)$},
+                ymin=0, ymax=3.5,
+                xmin=0, xmax=1.1
+            ]
+                \draw[dashed] (axis cs:0.9, 0.5) -- (axis cs:0,0.5);
+                \draw[dashed] (axis cs:0.9, 3) -- (axis cs:0,3);
+                \draw[dashed] (axis cs:0.9, 3) -- (axis cs:0.9,0);
+                \addplot[smooth, thick] coordinates {(0,1) (0.4, 1.2) (0.7,2) (0.9, 3)};
+                \fill (axis cs:0,1) circle (1.5pt);
+            \end{axis}
+        \end{tikzpicture}
+        \caption{$\mathbb{E}X >$ VaR$_{1-\varepsilon}(X)$}
+    \end{minipage}
+\end{figure}
+
+В обоих случаях график $ES_p(X)$ стартует из ES$_0(X)$ и возрастает до ES$_{1-\varepsilon}(X)$. В случае, представленном на рисунке 3, по теореме о промежуточном значении, график пересечет VaR$_{1-\varepsilon}(X)$, причем в единственной точке в силу строгой монотонности. В случае на рисунке 4 пересечений не будет. Таким образом справедливо следующее утверждение:
+\begin{state}
+Пусть $\mathbb{E}X < \infty$, $\varepsilon \in (0,1)$. Тогда 
+\[
+    \exists! \;c \in [1,1/\varepsilon], \text{ удовлетворяющее (1)} \iff \mathbb{E}X \leq \text{VaR}_{1-\varepsilon}(X)
+\]
+\end{state}
+
+Стоит отметить, что в случае положительных абсолютно непрерывных распределений VaR$_{1-\varepsilon}(X)\to \infty$ при $\varepsilon \to 0$, поэтому, начиная с некоторого достаточно малого $\varepsilon_0$, утверждение теоремы будет выполняться для всех $\varepsilon < \varepsilon_0$. На практике используемые значения $\varepsilon$ обычно не превышают $0.05$, что позволяет утвеждать существование и единственность $\Pi_\varepsilon(X)$ для большинства используемых распределений.
+
+
+\begin{remark}
+    Уравнение $(1)$ имеет следующий вид:
+    \[
+        \frac{1}{c\varepsilon}\int_{1-c\varepsilon}^1F^{-1}_X(q)dq = F^{-1}_X(1-\varepsilon)
+    \]
+    Сделаем в интеграле замену $q = 1 - c\varepsilon t$. Тогда $dq = -c\varepsilon dt$:
+    \[
+        \frac{1}{c\varepsilon}\int_{1}^0F^{-1}_X(1-c\varepsilon t)(-c\varepsilon) dt = \int_{0}^1F^{-1}_X(1-c\varepsilon t)dt
+    \]
+    Тогда исходной уравнение перепишется в виде:
+    \begin{equation}
+        \int_{0}^1F^{-1}_X(1-c\varepsilon t)dt = F_X^{-1}(1-\varepsilon)
+    \end{equation}
+    Пусть теперь $S_X(x):= 1 - F_X(x)$ - функция выживания случайной величины $X$. Заметим, что
+    \[
+        S_X(F_X^{-1}(p)) = 1 - F_X(F_X^{-1}(p)) = 1 - p 
+    \]
+    Применяя обратную функцию выживания, получаем, что 
+    \[
+        S_X^{-1}(1-p) = F_X^{-1}(p)
+    \]
+    Тогда уравнение (2) можно переписать в виде:
+    \[
+        \int_{0}^1S^{-1}_X(c\varepsilon t)dt = S_X^{-1}(\varepsilon)
+    \]
+    Такой вид уравнения может быть полезен для численного поиска решения при малых значениях $\varepsilon$, так как различные статистические пакеты дают более точное значение для $S_X^{-1}(\varepsilon)$, чем для $F_X^{-1}(1-\varepsilon)$.
+\end{remark}
+
+
+\section{Теоретические особенности PELVE}
+\subsection{Инвариантность и упорядоченность}
+\paragraph{}
+В этом разделе мы рассмотрим важные свойства показателя PELVE, такие как инвариантность к сдвигу и масштабированию, поведение при выпуклых возрастающих преобразованиях случайной величины. Особую практическую значимость имеет первое свойство, поскольку оно позволяет изучать упрощенный подкласс случайных величин вместо всего широкого класса. Например, для определения значения PELVE нормального распределения достаточно знать значения лишь для стандартного гауссовского распределения, так как все остальные получаются из него сдвигом и масштабированием.
+
+Еще одним важным достоинством PELVE является его поведение при выпуклых преобразованиях: выпуклое вниз преобразование случайной величины не уменьшает показатель PELVE. В общем случае, для возрастающей и выпуклой вниз функции $f(x)$ и случайной величины $X$, $f(X)$ обладает более тяжелым хвостом, чем X. Таким образом, показатель PELVE можно интерпретировать как меру тяжести хвоста распределения.
+
+\begin{theorem}
+    Пусть $X \in L^1$, $\varepsilon \in (0, 1)$ и $\mathbb{E}X\leq \text{VaR}_{1-\varepsilon}(X)$. Тогда:
+    \begin{enumerate}[label=(\roman*), font=\textit]
+        \item $\forall \, \lambda>0,\, a \in \mathbb{R},$ $\Pi_\varepsilon(\lambda X+a) = \Pi_\varepsilon(X)$.
+        \item если $f:\mathbb{R} \to \mathbb{R}$ - возрастающая выпуклая вверх функция с $f(X) \in L^1$, то $\Pi_\varepsilon(f(X))\leq \Pi_\varepsilon(X)$.
+        \item если $g:\mathbb{R} \to \mathbb{R}$ - возрастающая выпуклая вниз функция с $g(X) \in L^1$, то $\Pi_\varepsilon(g(X))\geq \Pi_\varepsilon(X)$.
+    \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\text{}
+\begin{enumerate}[label=(\roman*):, font=\textit]
+    \item Покажем, что квантильная функция обладает свойствами линейности для $\lambda X + a$:
+    \[
+        \mathbb{P}(\lambda X + a \leq \lambda F_X^{-1}(p) + a) = \mathbb{P}(X\leq F_X^{-1}(p)) = p  \iff F_{\lambda X + a}^{-1}(p) = \lambda F_X^{-1}(p) + a
+    \]
+
+    Дальше рассмотрим ES$_p(\lambda X + a)$:
+    \[
+        \text{ES}_p(\lambda X + a) = \frac{1}{1-p}\int_p^1F_{\lambda X + a}^{-1}(q)dq = \frac{1}{1-p}\int_p^1(\lambda F_X^{-1}(q) + a)dq =  
+    \]
+    \[
+         = \frac{\lambda}{1-p}\int_p^1 F_X^{-1}(q)dq + \frac{1}{1-p}\int_p^1adq = \lambda \text{ES}_p(X) + a
+    \]
+
+    Тогда уравнение (1) для $\lambda X + a$ примет вид:
+    \[
+        \text{ES}_{1-c\varepsilon}(\lambda X + a) = \text{VaR}_{1-\varepsilon}(\lambda X + a) \iff \lambda \text{ES}_{1-c\varepsilon}(X) + a = \lambda \text{VaR}_{1-\varepsilon}(X) + a \iff
+    \]
+    \[
+        \iff \text{ES}_{1-c\varepsilon}(X) = \text{VaR}_{1-\varepsilon}(X)
+    \]
+    
+    Это и означает, что $\Pi_\varepsilon(\lambda X + a) = \Pi_\varepsilon(X)$.
+
+    \item
+    Для любой возрастающей функции $f(x)$ выполнено следующее:
+    \[
+        \mathbb{P}(X\leq\text{VaR}_p(X)) = \mathbb{P}(f(X) \leq f(\text{VaR}_p(X))) 
+    \]
+    \[
+        \implies \text{VaR}_p(f(X))= f(\text{VaR}_p(X))
+    \]
+
+    Обозначим $c_1 = \Pi_\varepsilon(f(X))$, $c_2 = \Pi_\varepsilon(X)$. Тогда надо показать, что $c_1 \leq c_2$. В силу утверждения 2.1 ES$_{1-c_2\varepsilon}(X)=$ VaR$_{1-\varepsilon}(X)$.
+
+    Напомним неравенство Йенсена: для выпуклых вниз функций $\varphi(x) : \varphi(X) \in L^1$ выполнено:
+    \[
+        \varphi(\mathbb{E}X)\leq \mathbb{E}\varphi(X).
+    \]
+    Если же, как  в нашем случае, $f$ выпукла вверх, то $-f$ будет выпукла вниз и неравенство сменит знак:
+    \begin{equation*}
+        \mathbb{E}f(X) \leq f(\mathbb{E}X) = f(\text{ES}_0(X)) \leq f(\text{ES}_{1-c_2\varepsilon}(X)) =
+    \end{equation*}
+    \[
+        =f(\text{VaR}_{1-\varepsilon}(X)) = \text{VaR}_{1-\varepsilon}(f(X))
+    \]
+    $\implies$ ES$_{1-c_1\varepsilon}(f(X))=$ VaR$_{1-\varepsilon}(f(X))$ согласно утверждению 2.1.
+
+    Неравенство Йенсена так же справедливо для условного матожидания: в тех же предположениях на $\varphi(x)$ выполнено: 
+    \[
+        \varphi(\mathbb{E}[X|\mathcal{A}]) \leq \mathbb{E}[\varphi(X)|\mathcal{A}],
+    \]
+    где $\mathcal{A} \subset \mathcal{F}$ - некоторая под-$\sigma$-алгебра.
+    
+    Теперь покажем, что ES$_p(f(X)) \leq$ $f(\text{ES}_p(X))$. Для этого воспользуемся определением ES через условное матожидание:
+    \[
+        \text{ES}_p(f(X))= \mathbb{E}[f(X)|f(X)>F^{-1}_{f(X)}(p)] = \mathbb{E}[f(X)|f(X)>f(F^{-1}_X(p))] =  
+    \]
+    \[
+        = \mathbb{E}[f(X)|X>F^{-1}_X(p)] \leq f(\mathbb{E}[X|X>F^{-1}_X(p)]) = f(\text{ES}_p(X))
+    \]
+
+    Отсюда 
+    \[
+        \text{ES}_{1-c_2\varepsilon}(f(X))\leq f(\text{ES}_{1-c_2\varepsilon}(X)) = f(\text{VaR}_{1-\varepsilon}(X))= \text{VaR}_{1-\varepsilon}(f(X))= \text{ES}_{1-c_1\varepsilon}(f(X))
+    \]
+    И, наконец, в силу монотонности ES$_p(f(X))$:
+    \[
+        1-c_2\varepsilon \leq 1-c_1\varepsilon \iff c_1 \leq c_2
+    \]
+    \item
+    Если $g$ возрастает и выпукла вниз, то $f := g^{-1}$ является возратающей и выпуклой вверх функцией. Тогда из пункта $(ii)$ сразу вытекает, что:
+    \[
+        \Pi_\varepsilon(X) = \Pi_\varepsilon(f(g(X))) \leq \Pi_\varepsilon(g(X))
+    \]
+
+\end{enumerate}
+    
+\end{proof}
+
+Вообще говоря, (ii) утверждение теоремы остается верным, когда функция $f(x)$ является неубывающей. Соответствующее доказательство приведено в \cite{метка0} и основано на представлении ES в виде:
+\[
+    \text{ES}_p(X) = \sup_{Q \in \mathcal{Q}_p}\mathbb{E}^Q(X),\; X \in L^1,
+\]
+где $\mathcal{Q}_P$ - множество вероятностных мер $Q$ на $(\Omega, \mathcal{F})$ с производной Радона-Никодима 
+\[
+    \frac{dQ}{d\mathbb{P}}\leq \frac{1}{1-p}
+\]
+
+Напомним, что $\mathbb{P}$ - вероятностная мера на исходном пространстве $(\Omega, \mathcal{F}, \mathbb{P)}$. Авторы ссылаются на работу \cite{Embrechts}, однако там это утверждение доказано для случайных величин из $L^\infty$. Определения пространства $L^\infty$, а также связанных с ним понятий, можно найти, например, в \cite{Billingsley}.
+
+Тем не менее, в рамках настоящей работы интерес представляют случайные величины из $L^1$. Хотя вышеупомянутое представление изначально установлено для $L^\infty$, оно остаётся справедливым и в классе $L^1$, что строго доказывается в \cite{McNeil}, теорема 8.14.
+
+Теперь приведем несколько примеров применения этой теоремы. Значения показателя PELVE для приведенных распределений будут вычислены в 4 разделе.
+\begin{example}
+$\text{}$
+    \begin{enumerate}
+        \item Пусть $X \sim Exp(\lambda)$. Найдем распределение $ Y = e^X$:
+        \[
+            \mathbb{P}(e^X \leq x) = \mathbb{P}(X \leq \ln x) = (1 - e^{-\lambda \ln x})\chi_{[0, +\infty)}(\ln x) \boxed{=}
+        \]
+        Заметим, что $\ln x \geq 0 \iff x \geq 1$. Тогда 
+        \[
+            \boxed{=} \bigg(1-\frac{1}{x^{\lambda}}\bigg)\chi_{[1, +\infty)}(x)
+        \]
+        Таким образом, $Y \sim Pareto(\lambda, 1)$, и при $\lambda > 1$ верно следующее:
+        \[
+            \Pi_\varepsilon(e^X) = \bigg(\frac{\lambda}{\lambda - 1}\bigg)^{\lambda}  > e = \Pi_\varepsilon(X),
+        \]
+        что соответствует $(iii)$ пункту теоремы 3.1.
+        \item Пусть $X \sim Pareto(2, 1)$. Рассмотрим $Y \sim \sqrt{X}$:
+        \[
+            \mathbb{P}(\sqrt{X} \leq x) = \mathbb{P}(X \leq x^2) = \bigg(1-\frac{1}{(x^2)^2}\bigg)\chi_{[1, +\infty)}(x^2) = \bigg(1-\frac{1}{x^4}\bigg)\chi_{[1, +\infty)}(x),
+        \]
+        То есть $Y \sim Pareto(4, 1)$ и выполнено:
+        \[
+            \Pi_\varepsilon(\sqrt{X}) \approx 3.16 < 4 = \Pi_\varepsilon(X)
+        \]
+    \end{enumerate}
+\end{example}
+\begin{example}
+    Пусть случайная величина $X$ описывает потери застрахованного клиента. Раньше мы предполагали, что потери страховой компании, связанные с этим договором будут состалять $X$, однако реальные договора страхования включают в себя некоторые дополнительные условия. 
+
+    Рассмотрим случай, когда страховая компания заключает договор перестрахования с перестраховочной компанией. В этом случае, если потери клиента страховой будут не выше какого-то фиксированного уровня $r$, то страховая компания полностью покроет этот ущерб. Если же потери превысят значение $r$, то страховая компания выплатит из своих средств сумму $r$, а остальное запросит у перестраховочной компании. Тогда потери страховой компании можно записать так:
+    \[
+        L = \begin{cases}
+            X,  & X < r \\
+            r, & X \geq r
+        \end{cases}
+    \]
+    Другими словами, $L = \min(X, r)$. Функция $f(x) = \min(x, r)$ не убывает и выпукла вверх, поэтому можно применить (ii) пункт теоремы 3.1:
+    \[
+        \Pi_\varepsilon(L) \leq \Pi_\varepsilon(X)
+    \]
+
+    
+\end{example}
+
+\subsection{Сходимость}
+В этом разделе будет получен результат о сходимости $\Pi_\varepsilon(X_n)$ к $\Pi_\varepsilon(X)$ при некоторых условиях на последовательность $\{X_n\}_{n=1}^\infty$ и распределение $X$. Это свойство очень важно для эмпирической оценки показателя PELVE и, в комбинации со свойством инвариантности к сдвигу и масштабированию, для применения центральной предельной теоремы в какой-либо из ее форм к последовательности $S_n=X_1+...+X_n$. Это будет подробно изложено в следующих разделах, а пока перейдем к теореме. Нам также потребуются следующие определения:
+
+\begin{definition}
+    Последовательность $\{X_n\}_{n=1}^\infty$ сходится к $X$ по распределению, если:
+    \[
+        F_{X_n}(x) \to F_X(x) \text{ во всех точках непрерывности } F_X(x)
+    \]
+    Обозначается $X_n \overset{d}{\to}X$
+\end{definition}
+
+\begin{definition}
+    Последовательность $\{X_n\}_{n=1}^\infty$ называется равномерно интегрируемой, если:
+    \[
+        \sup_{n \in \mathbb{N}}\mathbb{E}[|X_n|\mathbb{I}(|X_n| > C)] \to 0 \text{ при } C  \to \infty
+    \]
+\end{definition}
+
+\begin{theorem}
+    Пусть для $\{X_n\}_{n=1}^{\infty} \subset L^1$, $X \in L^1$ и $\varepsilon \in (0, 1)$ выполнено:
+    \begin{enumerate}
+        \item $\mathbb{E}X_n \leq $ VaR$_{1-\varepsilon}(X_n)$ при всех $n \in \mathbb{N}$ и $\mathbb{E}X \leq $ VaR$_{1-\varepsilon}(X)$(то есть выполнены условия утверждения 2.1),
+        \item $X_n\overset{d}{\to}X$,
+        \item $\{X_n\}_{n=1}^{\infty}$ равномерно интегрируема.
+    \end{enumerate}
+
+    Тогда 
+    \[
+        \Pi_\varepsilon(X_n) \to \Pi_\varepsilon(X) \text{ при } n\to\infty
+    \]
+\end{theorem}
+
+\begin{remark}
+    На самом деле в условии 1 можно требовать, чтобы 
+    \[
+        \mathbb{E}X_n \leq \text{VaR}_{1-\varepsilon}(X_n) \text{ при всех } n > N \in \mathbb{N}
+    \]
+\end{remark}
+
+\begin{proof}
+    Рассмотрим следующую функцию:
+    \[
+        f_n(p)= \text{ES}_p(X_n)- \text{VaR}_{1-\varepsilon}(X_n)
+    \]
+    \begin{enumerate}
+    \item 
+    Сходимость $X_n \overset{d}{\to}X$ и непрерывность $F^{-1}_X(p)$ гарантирует(см. \cite{метка6}, лемма 21.2) сходимость VaR$_{p}(X_n)$ к VaR$_{p}(X)$ для всех $p\in [0,1)$.
+
+    \item
+    Теперь покажем, что ES$_p(X_n)\to$ ES$_p(X)$ при всех $p \in [0,1)$. 
+    \[
+        \text{ES}_p(X_n)=\mathbb{E}(X_n|X_n>F^{-1}_{X_n}(p)))= \frac{\mathbb{E}(X_n\mathbb{I}(X_n>F^{-1}_{X_n}(p)))}{1-p}\overset{?}{\to}
+    \]
+    \[
+        \overset{?}{\to}\frac{\mathbb{E}(X\mathbb{I}(X>F^{-1}_{X}(p)))}{1-p}=\text{ES}_p(X)
+    \]
+
+    Положим $a_n = F^{-1}_{X_n}(p)$ и $a = F^{-1}_{X}(p)$. Из первого пункта следует что $a_n\to a$.
+
+    Требуется показать, что 
+    \[
+        \mathbb{E}(X_n\mathbb{I}(X_n>a_n)) \to \mathbb{E}(X\mathbb{I}(X>a)) \text{ при } n\to\infty
+    \]
+    Запишем модуль разности и добавим и вычтем одинаковое слагаемое:
+    \[
+        \bigg|\mathbb{E}(X_n\mathbb{I}(X_n>a_n)) - \mathbb{E}(X\mathbb{I}(X>a))\bigg| \leq
+    \]
+    \[
+        \leq \bigg|\mathbb{E}(X_n\mathbb{I}(X_n>a_n)) - \mathbb{E}(X_n\mathbb{I}(X_n>a))\bigg| + \bigg|\mathbb{E}(X_n\mathbb{I}(X_n>a)) - \mathbb{E}(X\mathbb{I}(X>a))\bigg|
+    \]
+     
+    Обозначим первое и второе слагаемое через $T_1$ и $T_2$ соответственно и оценим их по отдельности:
+    \begin{enumerate}[label=(\roman*):, font=\textit]
+        \item 
+        Так как $\{X_n\}_{n=1}^\infty$ равномерно интегрируема, то $\forall\; \varepsilon_1 > 0\; \exists\;\delta > 0$, такое что для всех событий $A$ с $\mathbb{P}(A) < \delta$ 
+        \[
+        \sup_{n\in \mathbb{N}}\mathbb{E}(|X_n|\mathbb{I}(A)) < \varepsilon_1
+        \]
+        Доказательство этого факта приведено в \cite{метка7}, теорема 4.1.
+
+        Первое слагаемое можно записать как 
+        \[
+            \bigg|\mathbb{E}[X_n(\mathbb{I}(X_n>a_n)-\mathbb{I}(X_n>a))]\bigg| \leq \mathbb{E}\bigg[|X_n||(\mathbb{I}(X_n>a_n)-\mathbb{I}(X_n>a))|\bigg]
+        \]
+
+        Модуль разности двух индикаторов является индикатором симметрической разности двух событий:
+        \[
+            \bigg|\mathbb{I}(X_n>a_n)-\mathbb{I}(X_n>a))\bigg|=\mathbb{I}(\{X_n > a_n\} \Delta \{X_n > a\}) = 
+        \]
+        \[
+            = \mathbb{I}(\min{(a_n, a)} < X_n < \max{(a_n, a)})
+        \]
+
+        Оценим вероятность этого события:
+        \[
+            \mathbb{P}(\min{(a_n, a)} < X_n < \max{(a_n, a)}) = F_{X_n}(\max{(a_n, a)}) - F_{X_n}(\min{(a_n, a)})
+        \]
+
+        Поскольку $a_n \to a$, то $\forall\;\delta_1 > 0 \;\exists\; N_1 \in \mathbb{N}$, что для всех $n > N_1\; |a_n-a|<\delta_1 \implies a_n< a + \delta_1$ и $a_n> a - \delta_1$. Отсюда следует, что $\min{(a_n, a)} > a - \delta_1$ и $\max{(a_n, a)} < a + \delta_1$.
+
+        Воспользуемся монотонностью $F_{X_n}(x)$:
+        \[ 
+            F_{X_n}(\max{(a_n, a)}) - F_{X_n}(\min{(a_n, a)}) \leq F_{X_n}(a+\delta_1) - F_{X_n}(a-\delta_1) \to 
+        \]
+        \[
+            \to F_{X}(a+\delta_1) - F_{X}(a-\delta_1) \text{ при } n\to\infty
+        \]
+        В силу непрерывности $F_X(x)$ можно выбрать $\delta_1$ таким, что разность будет меньше $\delta$. 
+
+        Таким образом, $T_1 < \varepsilon_1$ в силу приведенного в начале факта.
+
+        \item 
+
+        Согласно теореме 2.3 из \cite{метка6}, если $X_n\overset{d}{\to}X$, то для любой непрерывной почти всюду функции $g(x)$ выполнено $g(X_n)\overset{d}{\to}g(X)$.
+        
+        Возьмем $g(x) = x\mathbb{I}(x>a)$. Она непрерывна в каждой точке, за исключением, быть может, точки $a$, имеющей меру 0. Тогда 
+        \[
+            X_n\mathbb{I}(X_n>a) \overset{d}{\to}X\mathbb{I}(X>a)
+        \]
+        Покажем, что последовательность $\{g(X_n)\}_{n=1}^\infty$ так же является равномерно интегрируемой:
+        \[
+            \mathbb{E}|g(X_n)|\mathbb{I}(|g(X_n)|>C) = \mathbb{E}|X_n\mathbb{I}(X_n>a)|\mathbb{I}(|X_n\mathbb{I}(X_n>a)|>C) \leq
+        \]
+        \[
+            \leq \mathbb{E}|X_n|\mathbb{I}(|X_n|>C)
+        \]
+        Неравенство выполнено, так как модуль индикатора не превосходит 1. Переходя к супремуму по $n$ получаем, что величина слева ограничена величиной, стремящейся к 0, справа. Следовательно $\{g(X_n)\}_{n=1}^\infty$ равномерно интегрируема.
+
+        По теореме 5.4 из \cite{метка7}, если $Y_n\overset{d}{\to}Y$ и $\{Y_n\}_{n=1}^\infty$ равномерно интегрируема, то $\mathbb{E}Y_n\to \mathbb{E}Y$. В нашем случае отсюда следует сходимость:
+        \[
+            \mathbb{E}X_n\mathbb{I}(X_n>a) \to \mathbb{E}X\mathbb{I}(X>a)
+        \]
+        Таким образом $T_2 < \varepsilon_1$
+        
+    \end{enumerate}
+
+    Наконец, из всего этого следует, что 
+    \[
+        \text{ES}_p(X_n) \to \text{ES}_p(X) \text{ для всех } p \in [0, 1).
+    \]
+
+    Таким образом при всех $p \in [0,1)$ выполнено:
+    \[
+        f_n(p)\to f(p):=\text{ES}_p(X)-\text{VaR}_{1-\varepsilon}(X)
+    \]
+
+    \item 
+
+    Покажем, что если на отрезке $[a,b]$ $\{f_n(x)\}_{n=1}^\infty$ не убывает при каждом фиксированном $n$ и поточечно сходится к непрерывной $f(x)$, то $f_n(x) \rightrightarrows f(x)$:
+
+    Так как $f(x)$ непрерывна, то она равномерно непрерывно, и можно выбрать разбиение отрезка $a=t_0<t_1<...<t_k=b$, такое, что $|t_{i+1}-t_i|<\delta$ и $|f(x)-f(y)|<\varepsilon_1$ для любых $x,y\in [t_i,t_{i+1}]$.
+
+    Так как $f_n(x)$ сходится к $f(x)$ поточечно, можно найти $N\in\mathbb{N}$: $|f_n(t_i)-f(t_i)|<\varepsilon_1$ при всех $n>N$ сразу для всех $i=0,1,..,k$. Это эквивалентно 
+    \[
+        f(t_i) -\varepsilon_1 \leq f_n(t_i) \leq f(t_i) +\varepsilon_1
+    \]
+
+    Пусть теперь $t\in [t_i,t_{i+1}]$. В силу монотонности $f_n(x)$ выполнено:
+    \[
+        f_n(t_i) \leq f_n(t) \leq f_n(t_{i+1})
+    \]
+
+    Объединяя две последние оценки, получаем:
+    \[
+        f(t_i) -\varepsilon_1 \leq f_n(t) \leq f(t_{i+1}) +\varepsilon_1
+    \]
+
+    В силу выбора разбиения $f(t_{i+1}) < f(t_i) + \varepsilon_1$. Тогда верна оценка:
+    \[
+        f(t_i) -\varepsilon_1 \leq f_n(t) \leq f(t_{i+1}) +\varepsilon_1 < f(t_i)+2\varepsilon_1
+    \]
+    Итак, $|f_n(t)-f(t_i)| < 2\varepsilon_1$ при $t\in[t_i, t_{i+1}]$. Тогда:
+    \[
+        |f_n(t)-f(t)| \leq |f_n(t)-f(t_i)| + |f(t_i)-f(t)| < 2\varepsilon_1 + \varepsilon_1 = 3\varepsilon_1
+    \]
+
+    Эта оценка не зависит от точки $t$, что и означает равномерную сходимость $f_n(x)\rightrightarrows f(x)$ на $[a,b]$.
+
+    \item 
+    В нашем случае $f_n(p)$ не убывают при каждом фиксированном $n$ и $f(p)$ непрерывна (этот факт был получен в ходе доказательства утверждения 2.1), скажем, на $[0, 1-\varepsilon]$, поэтому $f_n(p)\rightrightarrows f(p)$.
+    В силу утверждения 2.1 $\exists!\;c_n,\;c\in[1,1/\varepsilon]: f_n(1-c_n\varepsilon)=0$ и $f(1-c\varepsilon)=0$.
+
+    Рассмотрим разность:
+    \[
+        |f(1-c_n\varepsilon)-0| = |f(1-c_n\varepsilon)-f_n(1-c_n\varepsilon)| < \varepsilon_1 \text{ в силу равномерной сходимости}
+    \]
+    Отсюда следует, что $\exists \lim_{n\to \infty} f(1-c_n\varepsilon)=0$. Так как $f(x)$ непрерывна, то 
+    \[
+        0 = \lim_{n\to \infty} f(1-c_n\varepsilon) = f(1- \lim_{n\to\infty}c_n\varepsilon):=f(1-\tilde{c}\varepsilon)
+    \]
+
+    Тогда, в силу единственности решения уравнения $f(p)=0$, получаем, что 
+    \[
+        \Pi_\varepsilon(X_n)\to\Pi_\varepsilon(X) \text{ при } n\to \infty
+    \]
+    \end{enumerate}
+\end{proof}
+
+\begin{example}
+    Предположим, что страховая компания имеет портфель из $n$ однотипных договоров. Это означает, что связанные с ними случайные величины потерь $\{X_i\}_{i=1}^n$ одинаково распределены. Суммарный иск к компании будет равен $S_n=X_1+...+X_n$. Дополнительно будет предполагать, что $X_1$ имеет 
+    конечный второй момент. Тогда по теоремам 3.1(i), 3.2 и ЦПТ:
+    \[
+    \Pi_\varepsilon(S_n)=\Pi_\varepsilon\bigg(\frac{S_n-n\mathbb{E}X_1}{\sqrt{n\mathbb{D}X_1}}\bigg)\to \Pi_\varepsilon(N),
+    \]
+    где $N \sim N(0,1).$ Например, при $\varepsilon = 0.01$, $\Pi_\varepsilon(N) = 2.46$. Это значение близко числу 2.5, которое является пороговым значением при переходе от VaR$_{0.99}$ к ES$_{0.975}$. Для большинства распределений, которые будут рассмотрены дальше, значение $\Pi_\varepsilon(\cdot)$ будет больше, чем 2.46. 
+\end{example}
+
+\section{PELVE и его предел для конкретных распределений}
+
+В этом разделе будут получены значения $\Pi_\varepsilon(X)$ для некоторых распределений, которые используются в страховании(см. \cite{метка5}). Для каких-то случайных величин эти значения можно получить аналитически, разрешая уравнение 
+\[
+    \text{ES}_{1-c\varepsilon}(X)=\text{VaR}_{1-\varepsilon}(X),
+\]
+а где-то этого сделать не удается, и тогда уравнение приходиться решать численно. На примере гамма-распределения будет получена асимптотическая формула для $\Pi_\varepsilon(X)$ при $\varepsilon \to 0$. Кроме того, для некоторого класса распределений будет получено значение предела $\Pi_\varepsilon(X)$ при $\varepsilon \to 0$.
+
+Мы так же будем использовать теорему 3.1(i), чтобы немного упростить расчеты. 
+
+\begin{example}
+$\text{}$
+\begin{enumerate}
+    \item $X \sim R[a, b]$ - равномерное распределение на отрезке $[a, b]$.
+
+        Заметим, что $(X - a)/(b-a)$ имеет равномерное распределение на $[0,1]$, поэтому достаточно найти значения PELVE для него. Дальше считаем, что $X \sim R[0, 1]$.
+    
+        $F_X(x)=
+        \begin{cases}
+        0, &  x < 0 \\
+        x, &  0 \leq x \leq 1 \\
+        1, &  x \geq 1
+        \end{cases}$
+        
+        $F_X^{-1}(q) = q$
+    
+        \[\text{ES}_p(X) = \frac{1}{1-p}\int_p^1qdq = \frac{1-p^2}{2(1-p)} = \frac{p+1}{2}\]
+    
+        \begin{equation*}
+        \text{ES}_{1-c\varepsilon}(X) = \text{VaR}_{1-\varepsilon}(X) \iff \frac{2 -c\varepsilon}{2} = 1 - \varepsilon \iff c = 2
+        \end{equation*}
+
+        Следует отметить, что в этом примере значение PELVE определено только при $\varepsilon \leq 1/2$, так как иначе $1-c\varepsilon < 0$, что некорретно.
+
+    
+    
+    \item $X \sim Pareto(k, x_0)$
+
+        $F_X(x) = (1 -(\frac{x_0}{x})^k)\chi_{[x_0,+\infty)}(x)$, $p_X(x)= \frac{kx_0^k}{x^{k+1}}\chi_{[x_0,+\infty)}(x)$, где $x_0 > 0$.
+    
+        $F_X^{-1}(p) = \frac{x_0}{(1-p)^{1/k}}$
+
+        Покажем, что $X/x_0 \sim Pareto(k, 1)$:
+
+        \[
+            \mathbb{P}(X/x_0 \leq x ) = \mathbb{P}(X \leq x\cdot x_0) = \bigg(1-\bigg(\frac{x_0}{x \cdot x_0}\bigg)^k\bigg) \chi_{[x_0,+\infty]}(x\cdot x_0) = 
+        \]
+        \[
+            = \bigg(1-\bigg(\frac{1}{x}\bigg)^k\bigg) \chi_{[1,+\infty]}(x)
+        \]
+        А это функция распределения $Pareto(k, 1)$. Теперь считаем, что $X$ имеет это распределение. Воспользуемся определением ES через условное матожидание:
+        
+        \[
+            \text{ES}_p(X) = \frac{1}{\mathbb{P}(X > \text{VaR}_p(X))}\int_{\text{VaR}_p(X)}^{+\infty}xp_X(x)dx = \frac{1}{1-p}\int_{1/(1-p)^{1/k}}^{+\infty}x\frac{k}{x^{k+1}}dx = 
+        \]
+        \[
+            = \frac{k}{1-p}\frac{1}{(1-k)x^{k-1}}\bigg|^{+\infty}_{1/(1-p)^{1/k}} \overset{k > 1}{=} \frac{k}{1-p}\frac{(1-p)^{(k-1)/k}}{(k-1)} = \frac{k}{(k-1)(1-p)^{1/k}}
+        \]
+    
+        \[
+            \text{ES}_{1-c\varepsilon}(X) = \text{VaR}_{1-\varepsilon}(X) \iff \frac{k}{(k-1)(c\varepsilon)^{1/k}} = \frac{1}{\varepsilon^{1/k}} \iff c = \bigg(\frac{k}{k-1}\bigg)^k
+        \]
+
+        Это верно при $\varepsilon \leq \bigg(\frac{k}{k-1}\bigg)^{-k}$
+
+    \item $X \sim Exp(\lambda)$
+
+        $F_X(x) = (1 - e^{-\lambda x}) \chi_{[0,+\infty)}(x)$, $p_X(x) = \lambda e^{-\lambda x} \chi_{[0,+\infty)}(x)$
+
+        $F_{X}^{-1}(p)= -\frac{1}{\lambda}\ln(1-p)$
+
+        Для разнообразия вычислим значение $\Pi_\varepsilon(X)$ при произвольном $\lambda$. В конце мы увидим, что от него ничего не зависит.
+
+        \[
+            \text{ES}_p(X) = \frac{1}{1-p}\int_p^1-\frac{1}{\lambda}\ln(1-q)dq = \frac{1}{\lambda(1-p)} \bigg((1-q)\ln(1-q)+q\bigg)\bigg|^1_p =
+        \]
+        \[
+            = \frac{1}{\lambda(1-p)} \bigg(1 - (1-p)\ln(1-p)-p\bigg) = \frac{1}{\lambda(1-p)}\bigg((1-p)(1-\ln(1-p)\bigg) = 
+        \]
+        \[
+            = \frac{1-\ln(1-p)}{\lambda}
+        \]  
+        \[
+            \text{ES}_{1-c\varepsilon}(X) = \text{VaR}_{1-\varepsilon}(X) \iff \frac{1 - \ln(c\varepsilon)}{\lambda} = -\frac{\ln(\varepsilon)}{\lambda} \iff c = e
+        \]
+
+    \item $X \sim LN(a,\,\sigma^2)$
+
+    $p_X(x) = \frac{1}{x\sqrt{2\pi\sigma^2}}e^{-\frac{(\ln{x}-a)^2}{2\sigma^2}}$
+    
+    Если $Y \sim N(a, \sigma^2)$, то $X = e^Y \sim LN(a, \sigma^2)$. Заметим, что  $X\cdot e^{-a} = e^{Y - a} \sim LN(0, \sigma^2)$, так что дальше считаем, что $X \sim LN(0, \sigma^2)$.
+
+    
+    В общем случае $F_X(x)$ и $F_X^{-1}(p)$ не выражаются в элементарных функциях, но, как уже было показано, ES$_{1-c\varepsilon}(X)$ является монотонной функцией при $c \in [1, 1/\varepsilon]$, поэтому корень уравнения (1) можно находить численно с помощью метода Брента\footnote{Этот алгоритм сочетает в себе метод бисекции, метод секущих и метод обратной квадратичной интерполяции. Метод бисекции гарантирует сходимость к корню, если знаки значений на концах отрезка различны, однако скорость сходимости невысока. С другой стороны, методы секущих и обратной квадратичной интерполяции работают быстро, но не всегда сходятся. Алгоритм Брента на каждой итерации выбирает наиболее подходящий метод, чтобы обеспечить наибольшую скорость сходимости.}:
+    
+    \begin{lstlisting}[language=Python, gobble = 4]
+    import math
+    import numpy as np
+    import scipy.stats as stats
+    from scipy.integrate import quad
+    from scipy.optimize import brentq
+    
+    def log_normal_isf(sigma, q):
+        return stats.lognorm.isf(q, sigma) 
+        
+    def eq_for_c(c, sigma, eps, var):
+        def integrand(t):
+            p = c * eps * t
+            return log_normal_isf(sigma, p)
+        integral, _ = quad(integrand, 0, 1, epsabs=1e-14, epsrel=1e-14, limit=1000)
+        return integral - var
+    
+    def find_c(sigma, eps, var):
+        c_sol = brentq(eq_for_c, 1, 1 / eps, args=(sigma, eps, var))
+        return c_sol
+    
+    #LN(a, sigma2)
+    sigma2 = 1
+    eps = 0.01
+    var = log_normal_isf(math.sqrt(sigma2), eps)
+    
+    c = find_c(math.sqrt(sigma2), eps, var)
+    print(f"c = {c}")
+
+    
+    \end{lstlisting}
+
+    \item $X \sim Gamma(\alpha,\, \beta,\, x_0)$
+
+    $p_X(x) = \frac{\alpha^\beta(x-x_0)^{\beta - 1}}{\Gamma(\beta)}e^{-\alpha(x-x_0)} \chi_{[x_0,+\infty)}(x)$
+
+    Дальше будет показано, что линейным преобразованием $X$ можно свести к случайной величине с распределением $Gamma(1, \beta, 0)$.
+
+    Аналогично логнормальному распределению, значения будем находить численно:    
+    \begin{lstlisting}[language=Python, gobble = 4]
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import math
+    import scipy.stats as stats
+    from scipy.integrate import quad
+    from scipy.optimize import brentq
+    
+    def gamma_isf(alpha, beta, x_0, p):
+        return x_0 + stats.gamma.isf(p, beta, scale=1 / alpha)
+    
+    def eq_for_c(c, alpha, beta, x_0, eps, var):
+        def integrand(t):
+            p = c * eps * t
+            return gamma_isf(alpha, beta, x_0, p)
+        integral, _ = quad(integrand, 0, 1, epsabs=1e-14, epsrel=1e-14, limit=1000)
+        return integral - var
+    
+    def find_c(alpha, beta, x_0, eps, var):
+        c_min = 1.0
+        c_max = 1 / eps  
+        return brentq(eq_for_c, c_min, c_max,
+                      args=(alpha, beta, x_0, eps, var),
+                      maxiter=10000, xtol=1e-14)
+    
+    alpha, beta, x_0 = 1.0, 2.231, 0.0
+    eps = 1e-1
+    var = gamma_isf(alpha, beta, x_0, eps)
+    
+    c = find_c(alpha, beta, x_0, eps, var)
+    print(f"c = {c}")
+    
+    \end{lstlisting}
+
+    \item $X \sim N(0,1)$
+
+    Несмотря на то, что $X$ может принимать отрицательные значения, мы все равно вычислим значения показателя PELVE, так как они потребуются для предельных теорем.
+
+    \[p_X(x)=\frac{1}{\sqrt{2\pi}}e^{-\frac{x^2}{2}}\]
+
+    VaR$_{1-\varepsilon}(X) = \Phi^{-1}(1-\varepsilon)$, где $\Phi(x)$ - функция распределения стандартного нормального распределения.
+
+    \[
+        \text{ES}_{1-c\varepsilon}(X) = \frac{1}{c\varepsilon}\int_{\Phi^{-1}(1-c\varepsilon)}^{+\infty}xp_X(x)dx = \frac{1}{c\varepsilon}\bigg(-\frac{1}{\sqrt{2\pi}}e^{-\frac{x^2}{2}}\bigg)\bigg|^{+\infty}_{\Phi^{-1}(1-c\varepsilon)} = \frac{p_X(\Phi^{-1}(1-c\varepsilon))}{c\varepsilon}
+    \]
+
+    Тогда уравнение (1) примет вид:
+
+    \[
+        \frac{p_X(\Phi^{-1}(1-c\varepsilon))}{c\varepsilon} = \Phi^{-1}(1-\varepsilon)
+    \]
+
+    Опять же решаем численно:
+
+    \begin{lstlisting}[language=Python, gobble = 4]
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import math
+    import scipy.stats as stats
+    from scipy.integrate import quad
+    from scipy.optimize import brentq
+    
+    def norm_isf(p):
+        return stats.norm.isf(p)
+    
+    def eq_for_c(c, eps, var):
+        def integrand(t):
+            p = c * eps * t
+            return norm_isf(p)
+        integral, _ = quad(integrand, 0, 1, epsabs=1e-14, epsrel=1e-14, limit=1000)
+        return integral - var
+    
+    def find_c(eps, var):
+        c_min = 1.0
+        c_max = 1 / eps  
+        return brentq(eq_for_c, c_min, c_max,
+                      args=(eps, var),
+                      maxiter=10000, xtol=1e-14)
+    
+    eps = 0.01
+    var = norm_isf(eps)
+    
+    c = find_c(eps, var)
+    print(f"c = {c}")
+    
+    \end{lstlisting}
+    
+  
+\end{enumerate}
+
+Числовые значения для представленных распределений и некоторых $\varepsilon$ приведены в таблице 1. Дополнительно отметим, что для логнормального распределения указаны значения параметра $\sigma^2$.
+\end{example}
+
+\begin{table}[ht]
+\renewcommand{\arraystretch}{1.3}
+\centering 
+\begin{tabular}{|c|c|ccc|c|c|ccc|ccc|}
+\hline
+\multirow{2}{*}{$\varepsilon$} & \multirow{2}{*}{$R[0,1]$} & \multicolumn{3}{c|}{Pareto(k, 1)}                                                                            & \multirow{2}{*}{Exp($\lambda$)} & \multirow{2}{*}{$N(0,1)$} & \multicolumn{3}{c|}{Gamma(1, $\beta$, 0)}                    & \multicolumn{3}{c|}{LN(0, $\sigma^2$)}                       \\ \cline{3-5} \cline{8-13} 
+                               &                                     & \multicolumn{1}{c|}{2}                  & \multicolumn{1}{c|}{4}                     & 8                     &                                 &                           & \multicolumn{1}{c|}{2}    & \multicolumn{1}{c|}{4}    & 10   & \multicolumn{1}{c|}{0.04} & \multicolumn{1}{c|}{0.25} & 1    \\ \hline
+0.100                          & \multirow{4}{*}{2}                  & \multicolumn{1}{c|}{\multirow{4}{*}{4}} & \multicolumn{1}{c|}{\multirow{4}{*}{3.16}} & \multirow{4}{*}{2.91} & \multirow{4}{*}{$e$}            & 2.46                      & \multicolumn{1}{c|}{2.65} & \multicolumn{1}{c|}{2.59} & 2.55 & \multicolumn{1}{c|}{2.56} & \multicolumn{1}{c|}{2.76} & 3.23 \\ \cline{7-13} 
+0.050                          &                                     & \multicolumn{1}{c|}{}                   & \multicolumn{1}{c|}{}                      &                       &                                 & 2.51                      & \multicolumn{1}{c|}{2.67} & \multicolumn{1}{c|}{2.63} & 2.59 & \multicolumn{1}{c|}{2.61} & \multicolumn{1}{c|}{2.79} & 3.19 \\ \cline{7-13} 
+0.010                          &                                     & \multicolumn{1}{c|}{}                   & \multicolumn{1}{c|}{}                      &                       &                                 & 2.58                      & \multicolumn{1}{c|}{2.69} & \multicolumn{1}{c|}{2.67} & 2.64 & \multicolumn{1}{c|}{2.66} & \multicolumn{1}{c|}{2.81} & 3.13 \\ \cline{7-13} 
+0.005                          &                                     & \multicolumn{1}{c|}{}                   & \multicolumn{1}{c|}{}                      &                       &                                 & 2.59                      & \multicolumn{1}{c|}{2.7}  & \multicolumn{1}{c|}{2.68} & 2.65 & \multicolumn{1}{c|}{2.67} & \multicolumn{1}{c|}{2.81} & 3.11 \\ \hline
+\end{tabular}
+\caption{PELVE для некоторых распределений и значений $\varepsilon = 0.1, 0.05, 0.01, 0.005$} 
+\end{table}
+
+
+
+\FloatBarrier
+
+\subsection{Асимптотика PELVE для гамма-распределения}
+Начнем со следующего определения:
+\begin{definition}
+    Положительная на некотором луче $(A, +\infty)$ функция $f(x)$ называется правильно меняющейся на бесконечности порядка $\gamma$, если:
+    \[\forall \; t>0 \underset{x\to +\infty}{\lim}\frac{f(tx)}{f(x)} = t^\gamma\]
+и обозначается $f(x)\in $ RV$_{\gamma}$.
+\end{definition}
+В \cite{метка0} было установлено, что если функция выживания $S_X(x) = 1-F_X(x) \in $ RV$_{-\alpha}$ при $\alpha > 1$, то:
+\[
+    \underset{\varepsilon \to 0}{\lim}\Pi_\varepsilon(X) = \bigg(\frac{\alpha}{\alpha - 1}\bigg)^\alpha
+\]
+Ниже будет показано, что в случае гамма распределения $1-F(x)$ не является правильно меняющейся, поэтому поведение $\Pi_\varepsilon(X)$ при $\varepsilon \to 0$ требует отдельного изучения. Перед этим получим несколько вспомогательных результатов.
+
+\begin{enumerate}
+    \item 
+            Сначала преобразуем ES$_{1-c\varepsilon}$(X) для более удобных вычислений:
+            \begin{equation}
+                \frac{1}{c\varepsilon}\int_{1-c\varepsilon}^1F^{-1}(q)dq = 
+                \left\langle
+                 \begin{array}{c}
+                    1 - q = c\varepsilon t \\
+                    dq = -c\varepsilon dt
+                  \end{array}
+                \right\rangle
+                =\int_0^1F^{-1}(1-c\varepsilon t)dt 
+            \end{equation}
+
+    \item
+    Покажем, что если $X \sim Gamma(\alpha, \beta, x_0)$, то $\alpha (X - x_0) \sim Gamma(1,\beta, 0)$:
+    В общем случае, плотность гамма распределения задается следующей формулой:
+    \[
+        p_X(x)= 
+        \begin{cases}
+            \frac{\alpha^\beta(x-x_0)^{\beta - 1}}{\Gamma(\beta)}e^{-\alpha(x-x_0)}, & x > x_0 \\
+            0, & x < x_0
+        \end{cases} 
+    \]
+    По формуле преобразования плотностей:
+    \[
+        p_{\alpha(X - x_0)}(x) = \frac{1}{\alpha}p_X(\frac{x}{\alpha}+x_0) =
+        \begin{cases}
+            \frac{x^{\beta-1}}{\Gamma(\beta)}e^{-x}, & x > 0 \\
+            0, & x < 0
+        \end{cases} 
+    \]
+    Таким образом, достаточно уметь находить значения PELVE для гамма распределения без свдига с параметрами $(1, \beta)$.
+\end{enumerate}
+
+Запишем выражение для $1-F(x)$:\\
+\[
+    1-F(x) = \frac{1}{\Gamma(\beta)}\int_x^{+\infty}t^{\beta - 1}e^{-t}dt
+\]
+
+Интеграл выше является неполной гамма функцией и обозначается $\Gamma(\beta, x)$. Для нее справедливо следующее разложение(см. \cite{метка4} формула  (8.11.2)):
+\[
+    \int_x^{+\infty}t^{\beta - 1}e^{-t}dt = x^{\beta - 1}e^{-x}\bigg(1+ \sum_{k=1}^{n-1}\frac{(\beta - 1)...(\beta-k)}{x^k} + O\bigg(\frac{1}{x^n}\bigg)\bigg)
+\] 
+
+Покажем, что $1-F(x)$ не является правильно меняющейся. Из равенств выше можно записать: 
+\[
+    1-F(x) \sim \frac{x^{\beta-1}e^{-x}}{\Gamma(\beta)} \text{, при } x \to +\infty
+\]
+Тогда 
+\[
+    \underset{x\to +\infty}{\lim}\frac{1-F(tx)}{1-F(x)} = \underset{x\to +\infty}{\lim}\frac{(tx)^{\beta-1}e^{-tx}}{x^{\beta-1}e^{-x}} = t^{\beta-1} \underset{x\to +\infty}{\lim}e^{x(1-t)} = \infty \text{ при } 0<t<1
+\]
+Таким образом, теорема из \cite{метка0} неприменима. Вернемся к нахождению асимптотики. Для наших целей будет достаточно знать разложение неполной гамма функции до порядка 1/$x$:
+\[
+    \Gamma(\beta, x) = x^{\beta-1}e^{-x}\bigg(1+\frac{\beta-1}{x} + O\bigg(\frac{1}{x^2}\bigg)\bigg) \text{, } x\to \infty
+\]
+Тогда 
+\[
+    \ln(1-F(x))=(\beta-1)\ln x -x - \ln(\Gamma(\beta)) + \ln \bigg(1+\frac{\beta-1}{x}+ O\bigg(\frac{1}{x^2}\bigg)\bigg)
+\]
+Последний логарифм раскладывается следующим образом:
+\[
+    \ln \bigg(1+\frac{\beta-1}{x}+ O\bigg(\frac{1}{x^2}\bigg)\bigg) = \frac{\beta-1}{x} + O\bigg(\frac{1}{x^2}\bigg)
+\]
+Пусть $x := F^{-1}(1-\delta)$ и $L := -\ln\delta$. Тогда равенство примет вид:
+\begin{equation}
+    -L = (\beta-1)\ln x -x - \ln(\Gamma(\beta)) + \frac{\beta-1}{x} + O\bigg(\frac{1}{x^2}\bigg)
+\end{equation}
+Из этого равенства нужно будет выразить $x$ через $\delta$. Так как $x \to +\infty$, то $\delta \to 0$, следовательно $L \to +\infty$. Если поделить равенство выше на $x$, то $\underset{x\to +\infty}{\lim}L/x = 1$. Будем искать $x$ в виде $x = L + s$, где $s = o(L)$. Для начала перейдем от x к L:
+\begin{enumerate}
+    \item \[
+        \ln x=\ln(L+s)=\ln L + \ln\bigg(1+\frac{s}{L}\bigg)=\ln L+\frac{s}{L} + O\bigg(\bigg(\frac{s}{L}\bigg)^2\bigg)
+    \]
+    Заметим, что $O((\frac{s}{L})^2) = (\frac{s}{L})^2O(1) = (o(1))^2O(1)=o(1)=O(\frac{1}{L^2})$
+    \item \[
+        \frac{\beta - 1}{x} = \frac{\beta-1}{L+s}=\frac{\beta-1}{L}\frac{1}{1+s/L} =\frac{\beta-1}{L}\bigg(1+O\bigg(\frac{s}{L}\bigg)\bigg) = \frac{\beta-1}{L} + O\bigg(\frac{1}{L^2}\bigg)
+    \]
+    \item \[
+        O(\frac{1}{x^2})=\frac{1}{L^2}\frac{1}{(1+s/L)^2}O(1) = \frac{1}{L^2}\bigg(1+O\bigg(\frac{s}{L}\bigg)\bigg)O(1)=O(\frac{1}{L^2})
+    \]
+\end{enumerate}
+Подставляя это в (4), получаем:
+\[
+    -L = (\beta-1)\ln L + s\frac{(\beta-1)}{L}-L-s - \ln(\Gamma(\beta)) +\frac{\beta-1}{L} + O\bigg(\frac{1}{L^2}\bigg)\text{, } \delta \to 0
+\]
+Переносим s влево:
+\[
+    s\bigg(1-\frac{\beta-1}{L}\bigg)= (\beta-1)\ln L - \ln(\Gamma(\beta)) +\frac{\beta-1}{L} + O\bigg(\frac{1}{L^2}\bigg)
+\]
+Делим на скобку при $s$ и раскладываем в геометрическую прогрессию:
+\[
+   s =  \bigg((\beta-1)\ln L - \ln(\Gamma(\beta)) +\frac{\beta-1}{L} + O\bigg(\frac{1}{L^2}\bigg)\bigg)\bigg(1+\frac{\beta-1}{L} + O\bigg(\frac{1}{L^2}\bigg)\bigg)
+\]
+\[
+    s = (\beta-1)\ln L -\ln\Gamma(\beta) + \frac{(\beta-1)^2\ln L -(\beta - 1)\ln\Gamma(\beta)+(\beta-1)}{L} + O\bigg(\frac{1}{L^2}\bigg)
+\]
+
+Таким образом:
+\begin{equation}
+    F^{-1}(1-\delta) = L + (\beta-1)\ln L -\ln\Gamma(\beta) + \frac{(\beta-1)((\beta-1)\ln L -\ln\Gamma(\beta)+1)}{L} + O\bigg(\frac{1}{L^2}\bigg)
+\end{equation}
+Пусть $L_t = -\ln(c\varepsilon t) = L - \ln ct$. При подстановке  $\delta = c\varepsilon t$ в (5) вместо $L$ нужно будет писать $L_t$. Распишем асимптотику в терминах $L$:
+\begin{enumerate}
+    \item 
+    \[
+        \ln L_t = \ln(L-\ln ct)= \ln L - \frac{\ln ct}{L} + O\bigg(\frac{1}{L^2}\bigg)
+    \]
+    \item 
+    \[
+        \frac{1}{L_t} = \frac{1}{L}\frac{1}{1-\ln ct/L} = \frac{1}{L}\bigg(1+O\bigg(\frac{1}{L}\bigg)\bigg) = \frac{1}{L}+O\bigg(\frac{1}{L^2}\bigg)
+    \]
+\end{enumerate}
+Положим \[
+D = L + (\beta-1)\ln L - \ln\Gamma(\beta) + \frac{(\beta-1)((\beta-1)\ln L -\ln\Gamma(\beta)+1)}{L}
+\]
+Тогда, подставляя выражения для $L_t$ в (5), получаем:
+\[
+F^{-1}(1 - c\varepsilon t) = D - \ln ct - \frac{\ln ct}{L} + O\bigg(\frac{1}{L^2}\bigg)
+\]
+Далее
+\[
+\text{ES}_{1-c\varepsilon}(X)=\text{VaR}_{1-\varepsilon}(X) \iff \int_0^1F^{-1}(1-c\varepsilon t)dt = F^{-1}(1-\varepsilon) \iff
+\]
+\[
+    \iff D - \ln c + 1 - \frac{\ln c - 1}{L} + O\bigg(\frac{1}{L^2}\bigg)=D + O\bigg(\frac{1}{L^2}\bigg) \iff (\ln c - 1)\bigg(1+\frac{1}{L}\bigg)=O\bigg(\frac{1}{L^2}\bigg)
+\]
+Снова делим на скобку и раскладываем в геометрическую прогрессию:
+\[
+    \ln c = 1 + O\bigg(\frac{1}{L^2}\bigg) \iff c = e\bigg(1+O\bigg(\frac{1}{L^2}\bigg)\bigg)
+\]
+
+Таким образом справедливо следующее утверждение:
+\begin{state}
+    Пусть $X \sim Gamma(\alpha, \beta, x_0)$. Тогда 
+    \[
+        \lim_{\varepsilon \to 0}\Pi_\varepsilon(X) = e \approx 2.71828
+    \]
+\end{state}
+
+Сравним значения, полученные с помощью программы, и по асимптотической формуле для параметра $\beta = 2.231$:
+
+\begin{table}[ht]
+\renewcommand{\arraystretch}{1.3}
+\centering 
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+\hline
+$\varepsilon$   & $10^{-4}$ & $10^{-5}$ & $10^{-6}$ & $10^{-7}$ & $10^{-8}$ & $10^{-9}$ & $10^{-10}$ & $10^{-11}$ & $10^{-12}$ \\ \hline
+$c$             & 2.70739   & 2.71068   & 2.71266   & 2.71394   & 2.71482   & 2.71546   & 2.71593    & 2.71629          & 2.71658    \\ \cline{1-1}
+$e$             & 2.71828   & 2.71828   & 2.71828   & 2.71828   & 2.71828   & 2.71828   & 2.71828    & 2.71828          & 2.71828    \\ \cline{1-1}
+$\frac{1}{L^2}$ & 0.01179   & 0.00754   & 0.00524   & 0.00385   & 0.00295   & 0.00233   & 0.00189    & 0.00156          & 0.00131    \\ \hline
+\end{tabular}
+\caption{Численные значения для гамма-распределения} 
+\end{table}
+
+
+На рисунке 5 представлены графики кривых $\Pi_\varepsilon(X)$ для различных значений параметра $\beta$. 
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8 \textwidth]{gamma.png} % Путь к изображению
+    \caption{$X \sim Gamma(1, \beta, 0)$} % Подпись
+\end{figure}
+
+
+Изначально численные значения находились из решения уравнения 
+\[
+    \frac{1}{c\varepsilon}\int_{1-c\varepsilon}^1F^{-1}_X(q)dq = F^{-1}_X(1-\varepsilon),
+\]
+но уже при $\varepsilon = 10^{-14}$ было получено значение $c \approx 10.15299$, а при $\varepsilon = 10^{-15}$ $c \approx 51.23679 $, что явно противоречит теоретически полученному результату. Более детальное изучение этого явления показало, что при таких малых $\varepsilon$ достигается предел машинного представления десятичных чисел, и величины $1 - \varepsilon$ и $1- c\varepsilon$ имеют неверное значение. Однако, как было показано в замечании 2.4, от уравнения выше можно перейти к уравнению
+\[
+    \int_0^1S_X^{-1}(c\varepsilon t)dt = S_X^{-1}(\varepsilon),
+\]
+где $S_X(x) = 1- F_X(x)$ - функция выживания. В библиотеке $SciPy$, которая использовалась для вычисления квантилей распределения, обратная функция выживания выдает корректные значения даже при таких малых $\varepsilon$. 
+
+Таким образом, при численном решении задачи для малых значений $\varepsilon$ следует использовать эквивалентное уравнение через функцию выживания, поскольку оно позволяет избежать потерь точности, связанных с ограничениями машинного представления чисел. Это обеспечивает корректное вычисление коэффициента $\Pi_\varepsilon(X)$ и подтверждает теоретические результаты.
+
+\subsection{Предел $\Pi_\varepsilon(X)$}
+Мы явно получили значение предела показателя $\Pi_\varepsilon(X)$ в случае гамма распределения, что потребовало достаточно тщательного анализа. Теперь перейдем к более общему результату, который охватывает некоторый класс распределений. Для этого введём вспомогательную функцию:
+\[
+    H(x) = -\ln S_X(x)
+\]
+Будем предполагать, что функция выживания случайной величины $X$ не обращается в 0, чтобы $H(x)$ была корректно определена. Теперь мы готовы сформулировать следующую теорему.
+
+\begin{theorem}
+    Пусть $X$ - абсолютно непрерывная положительная случайная величина с $\mathbb{E}X < \infty$, причем $S_X(x) > 0$ для всех $x > 0$ и выполнены следующие условия:
+    \begin{enumerate}
+        \item $\lim_{x\to \infty}H'(x) = \infty$,
+        \item $|H''(x)| \leq M < \infty$ при $x > x_0 > 0$
+    \end{enumerate}
+    Тогда
+    \[
+        \lim_{\varepsilon \to 0}\Pi_\varepsilon(X) = e
+    \]
+\end{theorem}
+\begin{proof}
+    Будем использовать эквивалентное уравнение для $\Pi_\varepsilon(X)$:
+    \[
+        \int_0^1S_X^{-1}(c\varepsilon t)dt = S_X^{-1}(\varepsilon)
+    \]
+    \begin{enumerate}
+        \item 
+    
+    Сделаем в интеграле замену переменной $c\varepsilon t = u$ и проитегрируем по частям:
+    \[
+        \frac{1}{c\varepsilon}\int_0^{c\varepsilon}S_X^{-1}(u)du = uS_X^{-1}(u)\bigg|_0^{c\varepsilon} - \int_0^{c\varepsilon}udS_X^{-1}(u) \boxed{=}
+    \]
+    Поскольку $df^{-1}(x) = 1/f'(f^{-1}(x))$ и $S_X'(x)= - p_X(x)$, где $p_X(x)$ - плотность случайной величины $X$,  то
+    \[
+        \boxed{=} c\varepsilon S_X^{-1}(c\varepsilon) - \lim_{u \to 0}uS_X^{-1}(u) - \int_0^{c\varepsilon}u\frac{1}{-p_X(S_X^{-1}(u))}du = c\varepsilon S_X^{-1}(c\varepsilon) + 
+    \]
+    \[
+        + \int_0^{c\varepsilon}u\frac{1}{p_X(S_X^{-1}(u))}du \boxed{=} 
+    \]
+    Еще раз сделаем замену $u = S_X(t)$:
+    \[
+        \boxed{=} c\varepsilon S_X^{-1}(c\varepsilon) + \int_{+\infty}^{S_X^{-1}(c\varepsilon)}S_X(t)\frac{-p_X(t)}{p_X(t)}dt = c\varepsilon S_X^{-1}(c\varepsilon) + \int^{+\infty}_{S_X^{-1}(c\varepsilon)}S_X(t)dt
+    \]
+    Тогда исходное уравнение можно записать в виде:
+    \[
+        \frac{1}{c\varepsilon}(c\varepsilon S_X^{-1}(c\varepsilon) + \int^{+\infty}_{S_X^{-1}(c\varepsilon)}S_X(t)dt) = S_X^{-1}(\varepsilon)
+    \]
+    Умножим обе части на $c\varepsilon$ и сгруппируем слагаемые:
+    
+    \begin{equation}
+        c\varepsilon(S_X^{-1}(\varepsilon) - S_X^{-1}(c\varepsilon)) = \int^{+\infty}_{S_X^{-1}(c\varepsilon)}S_X(t)dt
+    \end{equation}
+    \item
+    Вообще говоря, $c = c(\varepsilon)$ и $c(\varepsilon) \varepsilon \in [\varepsilon, 1]$. Нам потребуется показать, что $c(\varepsilon)\varepsilon \to 0$ при $\varepsilon \to 0$. Предположим, что $\overline{\lim_{\varepsilon \to 0}} (c(\varepsilon)\varepsilon) = \delta > 0$. Тогда существует $\{\varepsilon_n\}_{n=1}^{\infty} : c(\varepsilon_n)\varepsilon_n \geq \delta$ и $\varepsilon_n \to 0$.  
+    Обозначим 
+    \[
+        x_n := S_X^{-1}(\varepsilon_n) \text{ и } y_n = S_X^{-1}(c(\varepsilon_n)\varepsilon_n)
+    \]
+    В силу уравнения (6):
+    \[
+        c(\varepsilon_n)\varepsilon_n(x_n - y_n) = \int_{y_n}^{\infty}S_X(t)dt
+    \]
+    Так как $y_n > 0$ и для положительной случайной величины $\mathbb{E}X = \int_0^{\infty}S_X(t)dt$, то
+    \[
+        x_n - y_n = \frac{1}{c(\varepsilon_n)\varepsilon_n} \int_{y_n}^{\infty}S_X(t)dt \leq \frac{\mathbb{E}X}{\delta} < \infty
+    \]
+    Тогда 
+    \[
+        x_n = y_n + (x_n - y_n) \leq S_X^{-1}(\delta) + \frac{\mathbb{E}X}{\delta} < \infty,
+    \]
+    но это противоречит тому, что $x_n = S_X^{-1}(\varepsilon_n) \to \infty$. Значит $\lim_{\varepsilon \to 0}(c(\varepsilon)\varepsilon) = 0$ и, следовательно, $S_X^{-1}(c(\varepsilon)\varepsilon) \to \infty$. 
+
+    \item 
+    Рассмотрим следующий предел:
+    \[
+        \lim_{y \to \infty}\frac{\int_y^{\infty}S_X(t)dt}{S_X(y)} = \lim_{y \to \infty}\frac{-S_X(y)}{-p_X(y)} = \lim_{y \to \infty}\frac{S_X(y)}{p_X(y)} =\lim_{y \to \infty}\frac{1}{H'(y)},
+    \]
+    где в начале было применено правило Лопиталя для неопределенности типа $[\frac{0}{0}]$, а последнее равенство верно, так как
+    \[
+        H'(x)=(-\ln S_X(x))' = -\frac{-p_X(x)}{S_X(x)} = \frac{p_X(x)}{S_X(x)}
+    \]
+    Тогда 
+    
+    \begin{equation}
+        \int_y^{\infty}S_X(t)dt = \frac{S_X(y)}{H'(y)}(1+o(1)) \text{ при } y\to \infty
+    \end{equation}
+    
+    \item
+    Теперь положим $x_\varepsilon := S_X^{-1}(\varepsilon)$ и $x_{c\varepsilon} = S_X^{-1}(c\varepsilon)$, подставим в (7) $y = S_X^{-1}(c\varepsilon)$ и вернемся к уравнению (6):
+    \[
+        c\varepsilon(x_{\varepsilon} - x_{c\varepsilon}) = \frac{S_X(S_X^{-1}(c\varepsilon)}{H'(x_{c\varepsilon})}(1+o(1)) = \frac{c\varepsilon}{H'(x_{c\varepsilon})}(1+o(1))
+    \]
+    Сокращаем на $c\varepsilon$ и получаем следующее уравнение:
+
+    \begin{equation}
+        x_{\varepsilon} - x_{c\varepsilon} =\frac{1}{H'(x_{c\varepsilon})}(1+o(1))  \text{ при } \varepsilon \to 0
+    \end{equation}
+
+    Отсюда так же следует, что $x_{\varepsilon} - x_{c\varepsilon} \to 0$ в силу условия 1.
+    
+    Рассмотрим $H(x_{\varepsilon}) = -\ln(S_X(S_X^{-1}(\varepsilon)) = -\ln\varepsilon$ и аналогично $H(x_{c\varepsilon}) = -\ln(c\varepsilon) = H(x_{\varepsilon}) -\ln c$.
+    Таким образом 
+    \begin{equation}
+        H(x_{c\varepsilon}) - H(x_{\varepsilon}) = -\ln c
+    \end{equation}
+    Как было показано, $x_{\varepsilon} - x_{c\varepsilon} \to 0$, следовательно можно разложить $H(x)$ в точке $x_{\varepsilon}$ в ряд Тейлора:
+    \[
+        H(x_{c\varepsilon}) = H(x_{\varepsilon} - (x_{\varepsilon} - x_{c\varepsilon})) = H(x_{\varepsilon}) - H'(x_{\varepsilon})(x_{\varepsilon} - x_{c\varepsilon}) + O(H''(x_{\varepsilon})(x_{\varepsilon} - x_{c\varepsilon})^2)
+    \]
+    Перегруппируем слагаемые и воспользуемся (9):
+    \[
+        H'(x_{\varepsilon})(x_{\varepsilon} - x_{c\varepsilon}) = \ln c + O(H''(x_{\varepsilon})(x_{\varepsilon} - x_{c\varepsilon})^2).
+    \]
+    Так как $x_{\varepsilon} - x_{c\varepsilon} \to 0$, а $H''(x)$ ограничена в силу условия 2, то это $O-$большое можно заменить на $o(1)$. Тогда уравнение выше перепишется следующим образом:
+    \begin{equation}
+        x_{\varepsilon} - x_{c\varepsilon} = \frac{\ln c}{H'(x_{\varepsilon})}(1+o(1))
+    \end{equation}
+    Теперь осталось объединить уравнения (8) и (10) и воспользоваться тем, что $H'(x_{\varepsilon}) \sim H'(x_{c\varepsilon})$ при $\varepsilon \to 0$:
+    \[
+        \frac{1}{H'(x_{c\varepsilon})}(1+o(1)) = \frac{\ln c}{H'(x_{\varepsilon})}(1+o(1))
+    \]
+    Отсюда немедленно следует, что 
+    \[
+        \ln c = 1 + o(1),
+    \]
+    а значит и 
+    \[
+        c = e(1+o(1)) \text{ при } \varepsilon \to 0
+    \]
+    Таким образом 
+    \[
+        \lim_{\varepsilon \to 0}\Pi_\varepsilon(X) = e
+    \]
+    
+    \end{enumerate}
+\end{proof}
+
+
+\begin{remark}
+    На 2 шаге доказательства мы воспользовались тем, что для положительной случайной величины $\mathbb{E}X = \int_0^{\infty}S_X(x)dx$, чтобы оценить разность $x_n - y_n$. Поскольку 
+    \[
+        \mathbb{E}(X | X > 0) = \frac{\mathbb{E}(X_{+})}{\mathbb{P}(X > 0)},
+    \]
+    то этот интеграл равен $\mathbb{E}(X | X > 0)\cdot\mathbb{P}(X > 0)$, что будет конечно для произвольной случайной величины с конечным матожиданием. Таким образом, эта теорема так же верна для случайных величин, принимающих отрицательные значения.
+\end{remark}
+\begin{remark}
+    В ходе доказательства теоремы 4.1 условие 2 было использовано только на 4 шаге для замены $O(H''(x_{\varepsilon})(x_{\varepsilon} - x_{c\varepsilon})^2)$ на $o(1)$. Так как было получено, что
+    \[
+        x_{\varepsilon} - x_{c\varepsilon} =\frac{1}{H'(x_{c\varepsilon})}(1+o(1)),
+    \]
+    то условие 2 можно ослабить до 
+    \[
+        \lim_{x\to \infty}\frac{H''(x)}{(H'(x))^2} = 0
+    \]
+\end{remark}
+
+С учетом сделанных выше замечаний можно сформулировать следующую теорему:
+\begin{theorem}
+    Пусть $X$ - абсолютно непрерывная случайная величина с $\mathbb{E}X < \infty$, причем $S_X(x) > 0$ для всех $x > 0$ и выполнены следующие условия:
+    \begin{enumerate}
+        \item $\lim_{x\to \infty}H'(x) = \infty$,
+        \item $\lim_{x\to \infty}H''(x)/(H'(x))^2 = 0$
+    \end{enumerate}
+    Тогда
+    \[
+        \lim_{\varepsilon \to 0}\Pi_\varepsilon(X) = e
+    \]
+\end{theorem}
+
+Так же эта теорема дает лишь достаточные условия того, что $\lim_{\varepsilon \to 0}\Pi_\varepsilon(X) = e$. Приведем пример, когда одно из условий нарушается, но несмотря на это предел равен $e$. 
+
+Пусть $X \sim W(k, 1)$ - распределение Вейбулла, где $k > 0$. Его функция распределения задается формулой:
+\[
+    F_X(x) = \begin{cases}
+        0, & x < 0 \\
+        1 - e^{-x^k}, & x \geq 0
+    \end{cases}
+\]
+Тогда функция выживания имеет следующий вид:
+\[
+    S_X(x) = \begin{cases}
+        1, & x < 0 \\
+        e^{-x^k}, & x \geq 0
+    \end{cases}
+\]
+Дальше будем рассматривать только $x\geq 0$. Тогда
+\[
+    H(x) = -\ln S_X(x) = -\ln e^{-x^k} = x^k
+\]
+\[
+    H'(x) = kx^{k-1}
+\]
+\[
+    H''(x) = k(k-1)x^{k-2}
+\]
+Покажем, что в этом случае $\lim_{\varepsilon \to 0}\Pi_\varepsilon(X) = e$. Обратная функция выживания будет иметь вид:
+\[
+    S_X^{-1}(q) = (-\ln q)^{1/k}
+\]
+Обозначим $L = -\ln\varepsilon$ и распишем асимптотику $S_X^{-1}(c\varepsilon t)$ при $\varepsilon \to 0$:
+\[
+    S_X^{-1}(c\varepsilon t) = (-\ln(c\varepsilon t))^{1/k} = (-\ln c + L - \ln t)^{1/k} = L^{1/k}\bigg(1-\frac{\ln c + \ln t}{L}\bigg)^{1/k} =
+\]
+\[
+    = L^{1/k}\bigg(1 - \frac{1}{k}\frac{\ln c + \ln t}{L} + O\bigg(\frac{1}{L^2}\bigg)\bigg)
+\]
+Теперь интегрируем по $t$ и приравниваем к $S_X^{-1}(\varepsilon)$:
+\[
+    \int_0^1S_X^{-1}(c\varepsilon t)dt = S_X^{-1}(\varepsilon)
+\]
+\[
+    L^{1/k}\bigg(1 - \frac{\ln c - 1}{kL} + O\bigg(\frac{1}{L^2}\bigg)\bigg) = L^{1/k}
+\]
+Сокращаем на $L^{1/k}$ и переносим слагаемые:
+\[
+    \frac{\ln c - 1}{kL} = O\bigg(\frac{1}{L^2}\bigg)
+\]
+Откуда 
+\[ 
+    \ln c = 1 + O\bigg(\frac{1}{L}\bigg)
+\]
+\[
+    c = e\bigg(1 + O\bigg(\frac{1}{L}\bigg)\bigg)
+\]
+В пределе получаем требуемое утверждение. Теперь рассмотрим несколько случаев:
+\begin{enumerate}
+    \item $0 < k \leq 1$ 
+    
+    Тогда 
+    \[
+        H'(x) = \frac{k}{x^{1-k}} \not \to \infty \text{ при } x \to \infty 
+    \]
+    В этом случае нарушается условие 1, но утверждение теоремы 4.1 по-прежнему верно.
+    \item k > 2
+
+    Тогда 
+    \[
+        H''(x) = k(k-1)x^{k-2} \text{ - не ограничена при } x\to \infty
+    \]
+    Здесь не выполняется условие 2, но утверждение остается верным.
+\end{enumerate}
+
+\begin{example}
+    Пусть $X \sim N(0,\sigma^2)$. Функция выживания имеет вид:
+    \[
+        S_X(x) = \frac{1}{\sqrt{2\pi\sigma^2}}\int_x^{+\infty}e^{-t^2/2\sigma^2}dt
+    \]
+    С помощью интегрирования по частям и оценки интеграла можно получить, что 
+    \[
+        S_X(x) = \frac{\sigma e^{-x^2/2\sigma^2}}{\sqrt{2\pi}x}\bigg(1+O\bigg(\frac{1}{x^2}\bigg)\bigg)
+    \]
+    Тогда 
+    \[
+        H(x) = -\ln S_X(x) = -\bigg(-\frac{x^2}{2\sigma^2} +\ln\frac{\sigma}{\sqrt{2\pi}} -\ln x + \ln\bigg(1 + O\bigg(\frac{1}{x^2}\bigg)\bigg)\bigg) = 
+    \]
+    \[
+        = -\ln\frac{\sigma}{\sqrt{2\pi}} + \frac{x^2}{2\sigma^2} + \ln x + O\bigg(\frac{1}{x^2}\bigg)
+    \]
+    Проверим, что выполняются условия 1 и 2 теоремы 4.2:
+    \begin{enumerate}
+        \item 
+        \[
+            H'(x) = \frac{x}{\sigma^2} + \frac{1}{x} +  O\bigg(\frac{1}{x^3}\bigg) \to \infty \text{ при } x \to \infty
+        \]
+        \item 
+        \[
+            H''(x) = \frac{1}{\sigma^2} - \frac{1}{x^2} + O\bigg(\frac{1}{x^4}\bigg) \text{ - ограничена на бесконечности}
+        \]        
+        \[
+            \implies \lim_{x \to \infty} \frac{H''(X)}{(H'(x))^2} = 0
+        \]
+    \end{enumerate}
+
+    Таким образом, выполнены условия теоремы 4.2 и значит
+    \[
+        \lim_{\varepsilon \to 0}\Pi_\varepsilon(X) = e
+    \]
+    На рисунке 6 представлен график кривой $\Pi_\varepsilon(X)$ для стандартного нормального распределения.
+    
+    \begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8 \textwidth]{norm.png} % Путь к изображению
+    \caption{$X \sim N(0, 1)$} % Подпись
+    \end{figure}
+\end{example}
+
+\begin{example}
+    Пусть теперь $X \sim LN(0, \sigma^2)$, то есть $X = e^Y$, где $Y \sim N(0, \sigma^2)$. Так как $S_X(x) = S_Y(\ln x)$, то все рассуждения из прошлого примера переносятся сюда заменой $x$ на $\ln x$. Таким образом, вне зависимости от параметра $\sigma^2$
+    \[
+        \lim_{\varepsilon \to 0}\Pi_\varepsilon(X) = e
+    \]
+    На рисунке 7 представлены графики кривых $\Pi_\varepsilon(X)$ для различных значений $\sigma^2$.
+\end{example}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8 \textwidth]{lognorm.png} % Путь к изображению
+    \caption{$X \sim LN(0, \sigma^2)$} % Подпись
+\end{figure}
+
+\FloatBarrier
+\begin{thebibliography}{9} 
+
+    \bibitem{Denuit}
+    Denuit, M., Dhaene, J., Goovaerts, M., Kaas, R. (2006). Actuarial theory for dependent risks: measures, orders and models. \textit{John Wiley $\And$ Sons}.
+
+    \bibitem{Billingsley}
+    Billingsley, P. (1995). Probability and measure. Third Edition. \textit{John Wiley $\And$ Sons}.
+
+    \bibitem{Albrecht}
+    Albrecht, P. (2003). Risk measures. \textit{Rationalitätskonzepte, Entscheidungsverhalten und ökonomische Modellierung}, 3.
+
+    \bibitem{Desmedt}
+    Desmedt, S., Wahlin, J. F. (2008). On the Subadditivity of Tail Value at Risk: An Investigation with Copulas. \textit{Casualty Actuarial Society} (Vol. 2, No. 2).
+
+    \bibitem{Hardy}
+    Hardy, M. R. (2006). An introduction to risk measures for actuarial applications. \textit{SOA syllabus study note}, 19.
+
+    \bibitem{Cousin}
+    Cousin, A., Di Bernardino, E. (2014). On multivariate extensions of conditional-tail-expectation. \textit{Insurance: Mathematics and Economics}, 55, 272-282.
+
+    \bibitem{Peng}
+    Peng, J. (2009). Value at risk and tail value at risk in uncertain environment. \textit{Proceedings of the 8th international conference on information and management sciences} (pp. 787-793).
+
+    \bibitem{Nadarajah}
+    Nadarajah, S., Zhang, B., Chan, S. (2014). Estimation methods for expected shortfall. \textit{Quantitative Finance}, 14(2), 271-291.
+
+    \bibitem{McNeil}
+     McNeil, A. J., Frey, R. and Embrechts, P. (2015). Quantitative Risk Management: Concepts, Techniques and Tools. Revised Edition. \textit{Princeton, NJ: Princeton University Press}.
+
+    \bibitem{BCBS2015}
+     BCBS (2015). Fundamental review of the trading book – interim impact analysis. \textit{Basel Committee on Banking Supervision}.
+     
+     \bibitem{BCBS2016}
+     BCBS (2016). Minimum capital requirements for market risk. \textit{Basel Committee on Banking Supervision}.
+
+     \bibitem{BCBS2019}
+     BCBS (2019). Minimum capital requirements for market risk. \textit{Basel Committee on Banking Supervision}.
+    
+    \bibitem{метка0}
+    Li H., Wang R. (2021). PELVE: Probability Equivalent Level of VaR and ES. \textit{Journal of Econometrics}, \textbf{234(1)}, 353–370.
+
+    \bibitem{Embrechts}
+    Embrechts, P., Wang, R. (2015). Seven proofs for the subadditivity of expected shortfall. \textit{Dependence Modeling}, 3(1), 000010151520150009.
+
+    \bibitem{метка4}
+    Paris, R.B. Chapter 8 Incomplete Gamma and Related Functions. \textit{Digital Library of Mathematical Functions}. https://dlmf.nist.gov/8 
+    
+    \bibitem{метка5}
+    Panjer, H. H., Willmot, G. E. (1992). Insurance Risk Models. \textit{Society of Actuaries}.
+
+    \bibitem{метка6}
+    Van der Vaart, A. W. (2000). Asymptotic statistics. \textit{Cambridge University Press}.
+    
+    \bibitem{метка7}
+    Gut, A. (2005). Probability: A Graduate Course. \textit{Springer}.
+
+    \bibitem{метка8}
+    Фалин Г.И. (1994). Математический анализ рисков в страховании. \textit{Российский юридический издательский дом}.
+
+    \bibitem{метка9}
+    Ширяев А.Н. (2004). Вероятность-1. \textit{МЦНМО}.
+
+
+\end{thebibliography}
+\end{document}
