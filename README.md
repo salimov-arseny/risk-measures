@@ -80,7 +80,7 @@ risk-measures/
 ## Установка и запуск
 
 ```bash
-git clone https://github.com/<your-username>/risk-measures.git
+git clone https://github.com/salimov-arseny/risk-measures.git
 cd risk-measures
 pip install -r requirements.txt
 pytest tests/ -v
