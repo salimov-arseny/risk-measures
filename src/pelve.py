@@ -8,7 +8,7 @@ Implements numerical computation of the PELVE coefficient
 for several distributions commonly used in actuarial science:
 Uniform, Pareto, Exponential, Normal, Lognormal, Gamma, Weibull.
 
-The implementation follows the bachelor thesis of A.E. Salimov
+The implementation follows the 3rd-year course paper of A.E. Salimov
 (MSU, Faculty of Mechanics and Mathematics, Department of Probability
 Theory, 2025) supervised by Prof. G.I. Falin.
 

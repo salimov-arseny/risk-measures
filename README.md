@@ -1,92 +1,81 @@
-# Вероятностно эквивалентные меры риска (PELVE)
+# Probability Equivalent Risk Measures (PELVE)
 
-Численная реализация и теоретическое исследование показателя **PELVE** (*Probability Equivalent Level of VaR and ES*) для распределений, используемых в страховой и финансовой математике.
+Numerical implementation and theoretical study of the **PELVE** coefficient (*Probability Equivalent Level of VaR and ES*) for distributions arising in actuarial and financial mathematics.
 
-Проект сопровождает курсовую работу:
+This project accompanies the 3rd-year course paper:
 
-> Салимов А.Е. *Вероятностно эквивалентные меры риска.* МГУ им. М.В. Ломоносова, механико-математический факультет, кафедра теории вероятностей, 2025. Научный руководитель — проф., д.ф.-м.н. Г.И. Фалин.
+> Salimov A.E. *Probability Equivalent Risk Measures.* M.V. Lomonosov Moscow State University, Faculty of Mechanics and Mathematics, Department of Probability Theory, 2025. Supervisor: Prof. G.I. Falin, Dr. Sc.
 
-PDF курсовой и исходник LaTeX лежат в [`paper/`](paper/).
+The PDF and LaTeX source are in [`paper/`](paper/).
 
-## Постановка задачи
+## Problem statement
 
-Пусть $X$ — положительная абсолютно непрерывная случайная величина, моделирующая суммарный страховой иск или финансовые потери, с функцией распределения $F_X$ и функцией выживания $S_X = 1 - F_X$. Для уровня доверия $p \in [0, 1)$ определены:
+Let $X$ be a positive absolutely continuous random variable modelling aggregate insurance claims or financial losses, with CDF $F_X$ and survival function $S_X = 1 - F_X$. For a confidence level $p \in [0, 1)$:
 
 $$\mathrm{VaR}_p(X) = F_X^{-1}(p),\qquad \mathrm{ES}_p(X) = \frac{1}{1 - p}\int_p^1 F_X^{-1}(q)\,dq.$$
 
-**PELVE** $\Pi_\varepsilon(X)$ — это константа $c \in [1, 1/\varepsilon]$, такая что
+The **PELVE** $\Pi_\varepsilon(X)$ is the constant $c \in [1, 1/\varepsilon]$ such that
 
 $$\mathrm{ES}_{1 - c\varepsilon}(X) = \mathrm{VaR}_{1 - \varepsilon}(X).$$
 
-Показатель введён в работе Li & Wang (2021) для оценки последствий перехода Базельского комитета от $\mathrm{VaR}_{0.99}$ к $\mathrm{ES}_{0.975}$. Пороговое значение — $c = 2.5$: если $\Pi_\varepsilon(X) > 2.5$, регуляторная нагрузка вырастет.
+Introduced by Li & Wang (2021), PELVE quantifies the regulatory impact of the Basel III transition from $\mathrm{VaR}_{0.99}$ to $\mathrm{ES}_{0.975}$. The threshold is $c = 2.5$: if $\Pi_\varepsilon(X) > 2.5$, capital requirements increase.
 
-## Основные результаты
+## Main results
 
-**Существование и единственность** (утв. 2.1). Если $\mathbb{E}X < \infty$ и $\mathbb{E}X \leq \mathrm{VaR}_{1-\varepsilon}(X)$, то решение уравнения единственно.
+**Existence and uniqueness** (Prop. 2.1). If $\mathbb{E}X < \infty$ and $\mathbb{E}X \leq \mathrm{VaR}_{1-\varepsilon}(X)$, the equation has a unique solution.
 
-**Инвариантность** (теор. 3.1). Для любых $\lambda > 0,\, a \in \mathbb{R}$: $\Pi_\varepsilon(\lambda X + a) = \Pi_\varepsilon(X)$. Выпуклое вниз преобразование не уменьшает PELVE — то есть показатель чувствителен к тяжести хвоста.
+**Invariance** (Thm. 3.1). For any $\lambda > 0,\, a \in \mathbb{R}$: $\Pi_\varepsilon(\lambda X + a) = \Pi_\varepsilon(X)$. Convex increasing transformations do not decrease PELVE, so it is a measure of tail heaviness.
 
-**Сходимость** (теор. 3.2). $X_n \xrightarrow{d} X$ + равномерная интегрируемость $\Rightarrow \Pi_\varepsilon(X_n) \to \Pi_\varepsilon(X)$.
+**Convergence** (Thm. 3.2). $X_n \xrightarrow{d} X$ together with uniform integrability implies $\Pi_\varepsilon(X_n) \to \Pi_\varepsilon(X)$.
 
-**Предельная теорема** (теор. 4.2). Если $H(x) = -\ln S_X(x)$ удовлетворяет
+**Limit theorem** (Thm. 4.2). If $H(x) = -\ln S_X(x)$ satisfies
 
 $$\lim_{x \to \infty} H'(x) = \infty,\qquad \lim_{x \to \infty} \frac{H''(x)}{(H'(x))^2} = 0,$$
 
-то $\lim_{\varepsilon \to 0} \Pi_\varepsilon(X) = e \approx 2.71828$.
+then $\lim_{\varepsilon \to 0} \Pi_\varepsilon(X) = e \approx 2.71828$.
 
-## Аналитические значения PELVE
+## Closed-form PELVE values
 
-| Распределение | $\Pi_\varepsilon(X)$ | Условие |
+| Distribution | $\Pi_\varepsilon(X)$ | Range |
 |---|---|---|
 | $R[a, b]$ | $2$ | $\varepsilon \leq 1/2$ |
 | $\mathrm{Pareto}(k, x_0)$ | $\left(\dfrac{k}{k - 1}\right)^k$ | $k > 1$ |
-| $\mathrm{Exp}(\lambda)$ | $e$ | для всех $\lambda > 0$ |
+| $\mathrm{Exp}(\lambda)$ | $e$ | for all $\lambda > 0$ |
 | $\mathrm{Gamma}(\alpha, \beta, x_0)$ | $e \cdot (1 + O(1/L^2)),\; L = -\ln\varepsilon$ | $\varepsilon \to 0$ |
 | $W(k, 1)$ | $e \cdot (1 + O(1/L))$ | $\varepsilon \to 0$ |
 | $N(0, \sigma^2)$ | $\to e$ | $\varepsilon \to 0$ |
 | $LN(0, \sigma^2)$ | $\to e$ | $\varepsilon \to 0$ |
 
-Численные значения для практических $\varepsilon$:
+## Numerical implementation
 
-| $\varepsilon$ | $R[0,1]$ | $\mathrm{Par}(2,1)$ | $\mathrm{Par}(4,1)$ | $\mathrm{Par}(8,1)$ | $\mathrm{Exp}$ | $N(0,1)$ | $\Gamma(1,2)$ | $\Gamma(1,10)$ | $LN(0,1)$ |
-|---|---|---|---|---|---|---|---|---|---|
-| 0.100 | 2 | 4 | 3.16 | 2.91 | $e$ | 2.46 | 2.65 | 2.55 | 3.23 |
-| 0.050 | 2 | 4 | 3.16 | 2.91 | $e$ | 2.51 | 2.67 | 2.59 | 3.19 |
-| 0.010 | 2 | 4 | 3.16 | 2.91 | $e$ | 2.58 | 2.69 | 2.64 | 3.13 |
-| 0.005 | 2 | 4 | 3.16 | 2.91 | $e$ | 2.59 | 2.70 | 2.65 | 3.11 |
-
-## Численная реализация
-
-Основное уравнение перепишем через функцию выживания:
+The defining equation is rewritten in terms of the survival function:
 
 $$\int_0^1 S_X^{-1}(c\varepsilon t)\,dt = S_X^{-1}(\varepsilon).$$
 
-Использование $S_X^{-1}$ вместо $F_X^{-1}(1 - \cdot)$ принципиально для устойчивости при малых $\varepsilon$: иначе $1 - \varepsilon$ и $1 - c\varepsilon$ совпадают по машинному представлению double. В библиотеке SciPy для этого есть функция `stats.dist.isf`.
+Using $S_X^{-1}$ (SciPy's `stats.dist.isf`) instead of $F_X^{-1}(1 - \cdot)$ is crucial for numerical stability at small $\varepsilon$, where $1 - \varepsilon$ and $1 - c\varepsilon$ collapse to the same double-precision value. The root in $c$ on $[1, 1/\varepsilon]$ is found via Brent's method on the integral evaluated by adaptive quadrature.
 
-Решение находится методом Брента: интегрируем по $t$ с помощью `scipy.integrate.quad`, далее `scipy.optimize.brentq` ищет корень по $c$ на $[1, 1/\varepsilon]$.
-
-## Структура репозитория
+## Repository layout
 
 ```
 risk-measures/
-├── src/pelve.py              # основной модуль
-├── notebooks/                # исходные ноутбуки исследования
-├── tests/test_pelve.py       # pytest-проверки формул и асимптотик
-├── paper/                    # курсовая (PDF + LaTeX)
+├── src/pelve.py              # core module
+├── notebooks/                # original research notebooks
+├── tests/test_pelve.py       # pytest checks of closed forms and limits
+├── paper/                    # thesis (PDF + LaTeX)
 ├── requirements.txt
 └── LICENSE
 ```
 
-## Установка и запуск
+## Install and run
 
 ```bash
-git clone https://github.com/salimov-arseny/risk-measures.git
+git clone https://github.com/<your-username>/risk-measures.git
 cd risk-measures
 pip install -r requirements.txt
 pytest tests/ -v
 ```
 
-Пример использования:
+Usage example:
 
 ```python
 from src.pelve import pelve_normal, pelve_pareto, pelve_pareto_closed_form
@@ -98,15 +87,15 @@ print(pelve_pareto(eps=1e-3, k=4).c)     # ≈ 3.16
 print(pelve_pareto_closed_form(k=4))     # (4/3)^4 ≈ 3.16
 ```
 
-## Литература
+## References
 
-Полный список (20 источников) — в `paper/thesis.tex`. Ключевые работы:
+Full bibliography (20 entries) in `paper/thesis.tex`. Key works:
 
 - Li H., Wang R. (2021). *PELVE: Probability Equivalent Level of VaR and ES.* Journal of Econometrics, 234(1), 353–370.
 - McNeil A., Frey R., Embrechts P. (2015). *Quantitative Risk Management.* Princeton University Press.
 - BCBS (2016). *Minimum capital requirements for market risk.* Basel Committee on Banking Supervision.
-- Фалин Г.И. (1994). *Математический анализ рисков в страховании.* Российский юридический издательский дом.
+- Falin G.I. (1994). *Mathematical analysis of insurance risks.* (in Russian).
 
-## Лицензия
+## License
 
 [MIT](LICENSE)
